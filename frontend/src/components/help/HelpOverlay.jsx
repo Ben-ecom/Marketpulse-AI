@@ -26,7 +26,7 @@ import {
   Help as HelpIcon,
   Dashboard as DashboardIcon,
   Description as DescriptionIcon,
-  Sentiment as SentimentIcon,
+  Mood as SentimentIcon,
   Timeline as TimelineIcon,
   KeyboardArrowRight as NextIcon,
   KeyboardArrowLeft as PrevIcon,
