@@ -1,0 +1,144 @@
+/* Visualisatie Stijlen */
+
+/* Canvas optimalisatie voor betere prestaties */
+canvas {
+  will-change: contents;
+}
+
+/* Wordcloud Stijlen */
+.wordcloud-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wordcloud-tag {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.wordcloud-tag:hover {
+  filter: brightness(1.2);
+  transform: scale(1.1);
+}
+
+/* Grafiek Interactie Stijlen */
+.zoom-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.zoom-button {
+  margin-left: 0.25rem;
+}
+
+.compare-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.platform-chip, .period-chip {
+  transition: all 0.2s ease;
+}
+
+.platform-chip:hover, .period-chip:hover {
+  transform: translateY(-2px);
+}
+
+/* Tooltip Stijlen */
+.custom-tooltip {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  padding: 10px 14px;
+  transition: opacity 0.3s ease;
+}
+
+.custom-tooltip-label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.custom-tooltip-value {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.custom-tooltip-name {
+  margin-right: 12px;
+  color: #666;
+}
+
+.custom-tooltip-data {
+  font-weight: 500;
+  color: #00ADAD;
+}
+
+/* Animatie Stijlen */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsieve Aanpassingen */
+@media (max-width: 600px) {
+  .zoom-controls {
+    margin-bottom: 0.75rem;
+  }
+  
+  .compare-controls {
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .custom-tooltip {
+    background-color: rgba(30, 30, 30, 0.95);
+    border-color: #444;
+  }
+  
+  .custom-tooltip-label {
+    color: #e0e0e0;
+  }
+  
+  .custom-tooltip-name {
+    color: #aaa;
+  }
+  
+  .custom-tooltip-data {
+    color: #4DD0E1;
+  }
+}

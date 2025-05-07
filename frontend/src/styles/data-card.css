@@ -1,0 +1,232 @@
+/* Premium DataCard Component Styles */
+
+.premium-data-card {
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.premium-data-card--gradient {
+  background: linear-gradient(135deg, #485563, #29323c);
+  color: white;
+}
+
+.premium-data-card--glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.premium-data-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.premium-data-card__title-container {
+  display: flex;
+  align-items: flex-start;
+}
+
+.premium-data-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #F3F4F6;
+  border-radius: 0.5rem;
+  margin-right: 1rem;
+  color: #00ADAD;
+}
+
+.premium-data-card--gradient .premium-data-card__icon {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.premium-data-card--glass .premium-data-card__icon {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #00ADAD;
+}
+
+.premium-data-card__title-content {
+  flex: 1;
+}
+
+.premium-data-card__title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: #4B5563;
+  margin: 0;
+  margin-bottom: 0.25rem;
+}
+
+.premium-data-card--gradient .premium-data-card__title {
+  color: white;
+}
+
+.premium-data-card__subtitle {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+.premium-data-card--gradient .premium-data-card__subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.premium-data-card__chart {
+  flex-shrink: 0;
+  width: 80px;
+  height: 40px;
+  margin-left: 1rem;
+}
+
+.premium-data-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.premium-data-card__value {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 2.5rem;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.premium-data-card--gradient .premium-data-card__value {
+  color: white;
+}
+
+.premium-data-card__trend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.premium-data-card__trend-value {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.premium-data-card__trend-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 0.25rem;
+}
+
+.premium-data-card__trend-period {
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.premium-data-card--gradient .premium-data-card__trend-period {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Loading state */
+.premium-data-card__loading {
+  flex: 1;
+}
+
+.premium-data-card__loading-value {
+  height: 2.5rem;
+  width: 60%;
+  background-color: #E5E7EB;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.premium-data-card--gradient .premium-data-card__loading-value {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.premium-data-card__loading-trend {
+  height: 1rem;
+  width: 40%;
+  background-color: #E5E7EB;
+  border-radius: 0.25rem;
+}
+
+.premium-data-card--gradient .premium-data-card__loading-trend {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .premium-data-card {
+    padding: 1rem;
+  }
+  
+  .premium-data-card__value {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  .premium-data-card__icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .premium-data-card__chart {
+    width: 60px;
+    height: 30px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .premium-data-card {
+    background-color: #1F2937;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .premium-data-card--glass {
+    background: rgba(31, 41, 55, 0.7);
+    border: 1px solid rgba(55, 65, 81, 0.2);
+  }
+  
+  .premium-data-card__icon {
+    background-color: #374151;
+  }
+  
+  .premium-data-card__title {
+    color: #F3F4F6;
+  }
+  
+  .premium-data-card__subtitle {
+    color: #9CA3AF;
+  }
+  
+  .premium-data-card__value {
+    color: #F9FAFB;
+  }
+  
+  .premium-data-card__trend-period {
+    color: #9CA3AF;
+  }
+  
+  .premium-data-card__loading-value,
+  .premium-data-card__loading-trend {
+    background-color: #374151;
+  }
+}

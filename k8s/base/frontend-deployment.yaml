@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketpulse-frontend
+  labels:
+    app: marketpulse-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: marketpulse-frontend
+  template:
+    metadata:
+      labels:
+        app: marketpulse-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: marketpulseai/frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        env:
+        - name: REACT_APP_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: marketpulse-config
+              key: FRONTEND_API_URL
+        - name: REACT_APP_SUPABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: marketpulse-config
+              key: SUPABASE_URL
+        - name: REACT_APP_SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: marketpulse-secrets
+              key: SUPABASE_ANON_KEY
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+      terminationGracePeriodSeconds: 30

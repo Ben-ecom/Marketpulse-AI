@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: marketpulse-staging
+
+resources:
+- ../../base
+
+patches:
+- path: patches/replicas.yaml
+- path: patches/resources.yaml
+- path: patches/configmap.yaml
+- path: patches/ingress.yaml
+
+images:
+- name: marketpulseai/frontend
+  newTag: staging
+- name: marketpulseai/backend
+  newTag: staging

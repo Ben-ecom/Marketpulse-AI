@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: ../docker/development/backend.Dockerfile
+    container_name: marketpulse-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ../../backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../docker/development/frontend.Dockerfile
+    container_name: marketpulse-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_SUPABASE_URL=${SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - VITE_API_URL=http://localhost:3000/api/v1
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  database:
+    image: postgres:15-alpine
+    container_name: marketpulse-db-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-marketpulse}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../docker/shared/init-scripts:/docker-entrypoint-initdb.d
+
+  adminer:
+    image: adminer
+    container_name: marketpulse-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+
+volumes:
+  postgres_data:

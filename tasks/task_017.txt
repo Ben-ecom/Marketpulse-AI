@@ -1,0 +1,48 @@
+# Task ID: 17
+# Title: Extend PlatformInsights Component with Sentiment Analysis and Trending Topics
+# Status: done
+# Dependencies: None
+# Priority: medium
+# Description: Add a third card to the renderRedditInsights method that visualizes sentiment analysis and trending topics from Reddit data, including progress bars for sentiment categories and chips for trending keywords.
+# Details:
+Enhance the existing PlatformInsights component by implementing a new visualization card for sentiment analysis and trending topics. The implementation should:
+
+1. Add a third card to the renderRedditInsights method
+2. Create a sentiment analysis section with three progress bars showing:
+   - Positive sentiment percentage
+   - Neutral sentiment percentage
+   - Negative sentiment percentage
+3. Implement a trending topics section displaying keyword chips
+4. Ensure the card has a consistent design with existing cards
+5. Make the component responsive across different screen sizes
+6. Handle edge cases such as:
+   - No data available
+   - Extremely skewed sentiment data
+   - Very long keyword strings
+7. Implement proper data formatting and percentage calculations
+8. Add appropriate tooltips for accessibility
+9. Ensure the component updates correctly when new data is received
+
+The sentiment data should be visualized using color-coded progress bars (green for positive, gray for neutral, red for negative). Trending keywords should be displayed as interactive chips that can be clicked for further filtering or information.
+
+# Test Strategy:
+Testing should verify both the functionality and visual appearance of the new card:
+
+1. Unit tests:
+   - Test renderRedditInsights renders the correct number of cards (should now be 3)
+   - Test sentiment progress bars display correct percentages based on input data
+   - Test trending topics chips render correctly with provided keywords
+   - Test empty/null data handling displays appropriate fallback UI
+   - Test extreme data cases (0% or 100% for sentiment categories)
+   - Test component updates correctly when props change
+
+2. Visual tests:
+   - Verify consistent styling with other cards
+   - Verify responsive behavior on different screen sizes
+   - Verify accessibility features work correctly
+
+3. Integration tests:
+   - Verify the component integrates correctly with the data source
+   - Verify interactions between the new card and existing functionality
+
+Create test fixtures with various data scenarios to thoroughly validate all aspects of the implementation.

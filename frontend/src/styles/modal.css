@@ -1,0 +1,169 @@
+/* Premium Modal Component Styles */
+
+.premium-modal__wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.premium-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.premium-modal {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 51;
+  margin: 1rem;
+  overflow: hidden;
+}
+
+.premium-modal--sm {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.premium-modal--md {
+  width: 100%;
+  max-width: 32rem;
+}
+
+.premium-modal--lg {
+  width: 100%;
+  max-width: 48rem;
+}
+
+.premium-modal--xl {
+  width: 100%;
+  max-width: 64rem;
+}
+
+.premium-modal--full {
+  width: calc(100% - 2rem);
+  height: calc(100vh - 2rem);
+}
+
+.premium-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.premium-modal__title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  color: #1F2937;
+  margin: 0;
+}
+
+.premium-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: transparent;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.premium-modal__close:hover {
+  background-color: #F3F4F6;
+  color: #1F2937;
+}
+
+.premium-modal__close:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 173, 173, 0.2);
+}
+
+.premium-modal__content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .premium-modal {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .premium-modal--sm,
+  .premium-modal--md,
+  .premium-modal--lg,
+  .premium-modal--xl {
+    width: calc(100% - 1rem);
+    max-width: none;
+  }
+  
+  .premium-modal__header {
+    padding: 1rem;
+  }
+  
+  .premium-modal__title {
+    font-size: 1.125rem;
+  }
+  
+  .premium-modal__content {
+    padding: 1rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .premium-modal {
+    background-color: #1F2937;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .premium-modal__header {
+    border-bottom-color: #374151;
+  }
+  
+  .premium-modal__title {
+    color: #F3F4F6;
+  }
+  
+  .premium-modal__close {
+    color: #9CA3AF;
+  }
+  
+  .premium-modal__close:hover {
+    background-color: #374151;
+    color: #F3F4F6;
+  }
+  
+  .premium-modal__close:focus {
+    box-shadow: 0 0 0 2px rgba(0, 173, 173, 0.3);
+  }
+}

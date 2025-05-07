@@ -1,0 +1,143 @@
+service: marketpulse-ai-scraper
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+  memorySize: 2048
+  timeout: 900
+  environment:
+    NODE_ENV: ${opt:stage, 'dev'}
+    PROXY_API_KEY: ${env:PROXY_API_KEY}
+    PROXY_SERVICE_URL: ${env:PROXY_SERVICE_URL}
+    SQS_QUEUE_URL: !Ref ScraperJobsQueue
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+        - sqs:GetQueueAttributes
+      Resource: !GetAtt ScraperJobsQueue.Arn
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: 
+        - !Join ['', ['arn:aws:s3:::', !Ref ScrapedDataBucket, '/*']]
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+package:
+  individually: true
+  exclude:
+    - node_modules/puppeteer/.local-chromium/**
+
+functions:
+  redditScraper:
+    handler: handlers/reddit.handler
+    events:
+      - sqs:
+          arn: !GetAtt ScraperJobsQueue.Arn
+          batchSize: 1
+          filterPatterns:
+            - body:
+                source: ["reddit"]
+    timeout: 900
+    memorySize: 2048
+
+  amazonScraper:
+    handler: handlers/amazon.handler
+    events:
+      - sqs:
+          arn: !GetAtt ScraperJobsQueue.Arn
+          batchSize: 1
+          filterPatterns:
+            - body:
+                source: ["amazon"]
+    timeout: 900
+    memorySize: 2048
+
+  instagramScraper:
+    handler: handlers/instagram.handler
+    events:
+      - sqs:
+          arn: !GetAtt ScraperJobsQueue.Arn
+          batchSize: 1
+          filterPatterns:
+            - body:
+                source: ["instagram"]
+    timeout: 900
+    memorySize: 2048
+
+  tiktokScraper:
+    handler: handlers/tiktok.handler
+    events:
+      - sqs:
+          arn: !GetAtt ScraperJobsQueue.Arn
+          batchSize: 1
+          filterPatterns:
+            - body:
+                source: ["tiktok"]
+    timeout: 900
+    memorySize: 2048
+
+  trustpilotScraper:
+    handler: handlers/trustpilot.handler
+    events:
+      - sqs:
+          arn: !GetAtt ScraperJobsQueue.Arn
+          batchSize: 1
+          filterPatterns:
+            - body:
+                source: ["trustpilot"]
+    timeout: 900
+    memorySize: 2048
+
+  queueJobs:
+    handler: handlers/queueJobs.handler
+    events:
+      - http:
+          path: /jobs
+          method: post
+          cors: true
+    timeout: 30
+    memorySize: 512
+
+resources:
+  Resources:
+    ScraperJobsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-jobs
+        VisibilityTimeout: 900
+        MessageRetentionPeriod: 1209600 # 14 days
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ScraperJobsDLQ.Arn
+          maxReceiveCount: 3
+
+    ScraperJobsDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-jobs-dlq
+        MessageRetentionPeriod: 1209600 # 14 days
+
+    ScrapedDataBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${self:provider.stage}-data
+        AccessControl: Private
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+              AllowedOrigins:
+                - '*'
+              MaxAge: 3000

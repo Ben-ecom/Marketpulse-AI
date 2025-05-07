@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marketpulse-config
+data:
+  NODE_ENV: "production"
+  FRONTEND_API_URL: "https://api.marketpulse.ai/api/v1"

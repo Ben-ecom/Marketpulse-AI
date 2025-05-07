@@ -1,0 +1,68 @@
+# Task ID: 12
+# Title: Verbeter Help Systeem in MarketPulse AI
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implementeer een uitgebreid help systeem in de MarketPulse AI applicatie om gebruikers te ondersteunen bij het gebruik van alle functionaliteiten.
+# Details:
+
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Integreer IntegratedHelpSystem in Alle Pagina's [pending]
+### Dependencies: None
+### Description: Integreer de bestaande IntegratedHelpSystem component in alle belangrijke pagina's van de MarketPulse AI applicatie om een consistente help-ervaring te bieden.
+### Details:
+- Identificeer alle belangrijke pagina's in de applicatie die nog geen help-functionaliteit hebben
+- Integreer de IntegratedHelpSystem component in elke pagina
+- Zorg voor de juiste activeView parameter voor elke pagina
+- Test de integratie op alle pagina's
+- Zorg voor consistente styling en positionering van help-elementen
+
+## 2. Implementeer Contextuele Tooltips voor UI-Elementen [pending]
+### Dependencies: None
+### Description: Voeg ContextualTooltip componenten toe aan belangrijke UI-elementen in de applicatie om gebruikers contextuele hulp te bieden bij specifieke functionaliteiten.
+### Details:
+- Identificeer belangrijke UI-elementen die contextuele hulp nodig hebben
+- Implementeer ContextualTooltip componenten voor deze elementen
+- Schrijf relevante en duidelijke help-content voor elke tooltip
+- Zorg voor consistente styling en gedrag van tooltips
+- Test de tooltips op verschillende schermformaten
+- Zorg voor toegankelijkheid volgens WCAG-richtlijnen
+
+## 3. Verbeter Feedback Mechanisme voor Help Content [pending]
+### Dependencies: None
+### Description: Verbeter het bestaande HelpFeedback component en integreer het in alle help-elementen om gebruikersfeedback te verzamelen en de help-content te verbeteren.
+### Details:
+- Analyseer het bestaande HelpFeedback component
+- Verbeter de gebruikerservaring van het feedback formulier
+- Implementeer een systeem om feedback te verzamelen en op te slaan in Supabase
+- Voeg analytics tracking toe voor feedback interacties
+- Integreer het feedback mechanisme in alle help-elementen
+- Implementeer een dashboard voor het bekijken en analyseren van feedback
+
+## 4. Personaliseer Help Content op Basis van Gebruikersrol en Ervaringsniveau [pending]
+### Dependencies: None
+### Description: Implementeer een systeem om help-content aan te passen op basis van de gebruikersrol en het ervaringsniveau van de gebruiker.
+### Details:
+- Analyseer het bestaande personalisatiesysteem in de IntegratedHelpSystem
+- Verbeter de logica voor het selecteren van de juiste help-content op basis van gebruikersrol
+- Implementeer verschillende niveaus van detail in help-content voor verschillende ervaringsniveaus
+- Voeg gebruikersinstellingen toe voor het aanpassen van help-voorkeuren
+- Test de personalisatie met verschillende gebruikersrollen en ervaringsniveaus
+- Implementeer A/B-testen om de effectiviteit van verschillende help-methoden te meten
+
+## 5. Ontwikkel en Verbeter Help Content [pending]
+### Dependencies: None
+### Description: Ontwikkel nieuwe en verbeter bestaande help-content voor alle functionaliteiten in de applicatie, inclusief FAQ items, video tutorials en contextuele help-teksten.
+### Details:
+- Analyseer de bestaande help-content in helpData.js en helpPointsData.js
+- Identificeer hiaten in de bestaande help-content
+- Schrijf nieuwe FAQ items voor veelgestelde vragen
+- Maak een plan voor video tutorials voor complexe functionaliteiten
+- Verbeter bestaande help-teksten voor duidelijkheid en relevantie
+- Zorg voor consistente toon en stijl in alle help-content
+- Implementeer een systeem voor het eenvoudig bijwerken van help-content
+

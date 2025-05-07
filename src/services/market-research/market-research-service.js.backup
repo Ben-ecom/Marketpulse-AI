@@ -1,0 +1,2616 @@
+/**
+ * Market Research and Analysis Module
+ * 
+ * Dit bestand bevat de hoofdservice voor marktonderzoek en -analyse, inclusief
+ * concurrentieanalyse, trendidentificatie, marktomvang schatting, segmentatie,
+ * prijsanalyse, gap-opportunity identificatie, en scraping integratie.
+ */
+
+// Core services
+const dataProcessingService = require('../data-processing/data-processing-service.js');
+const { getSentimentAnalysisService } = require('../nlp/sentiment-analysis.js');
+const { getPainPointsExtractionService } = require('../nlp/pain-points-extraction.js');
+const { getLanguageAnalysisService } = require('../nlp/language-analysis.js');
+const { ScrapingService } = require('../scraping/index.js');
+
+// Import specifieke marktonderzoek componenten
+const { MarketSizeEstimator } = require('./components/market-size-estimator.js');
+const { MarketSegmentation } = require('./components/market-segmentation.js');
+const { TrendAnalyzer } = require('./components/trend-analyzer.js');
+const { PriceAnalyzer } = require('./components/price-analyzer.js');
+const { CompetitorAnalyzer } = require('./components/competitor-analyzer.js');
+const { GapOpportunityIdentifier } = require('./components/gap-opportunity-identifier.js');
+
+/**
+ * Market Research Service klasse
+ */
+class MarketResearchService {
+  constructor() {
+    // Initialiseer services
+    this.dataProcessingService = dataProcessingService;
+    // Tijdelijke mock services voor NLP functionaliteiten
+    this.sentimentAnalysisService = { analyze: () => ({ sentiment: 'neutral', score: 0.5 }) };
+    this.painPointsExtractionService = { extract: () => ({ painPoints: [] }) };
+    this.languageAnalysisService = { analyze: () => ({ language: 'nl', confidence: 0.9 }) };
+    
+    // Initialiseer componenten
+    this.marketSizeEstimator = new MarketSizeEstimator();
+    this.marketSegmentation = new MarketSegmentation();
+    this.trendAnalyzer = new TrendAnalyzer();
+    this.priceAnalyzer = new PriceAnalyzer();
+    this.competitorAnalyzer = new CompetitorAnalyzer();
+    this.gapOpportunityIdentifier = new GapOpportunityIdentifier();
+    
+    // Initialiseer scraping service
+    this.scrapingService = null;
+    
+    // Database connectie voor rapporten (wordt geïnitialiseerd in initDatabase)
+    this.db = null;
+  }
+  
+  /**
+   * Haal scraping resultaten op voor specifieke keywords en platforms
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @param {Array<string>} platforms - Platforms om te scrapen (bijv. amazon, reddit, tiktok)
+   * @param {Object} options - Scraping opties
+   * @returns {Promise<Object>} - Scraping resultaten
+   */
+  async getScrapingResults(keywords, platforms = [], options = {}) {
+    console.log(`🔍 Scraping resultaten ophalen voor keywords: ${keywords.join(', ')} op platforms: ${platforms.join(', ')}`);
+    
+    try {
+      // Controleer of we mock data moeten gebruiken
+      if (process.env.USE_MOCK_DATA === 'true' || options.useMockData) {
+        console.log('🔄 Mock scraping data gebruiken');
+        return this.generateMockScrapingResults(keywords, platforms);
+      }
+      
+      // Initialiseer scraping service als die nog niet bestaat
+      if (!this.scrapingService) {
+        this.scrapingService = new ScrapingService();
+      }
+      
+      // Haal scraping resultaten op voor elk platform
+      const results = {
+        success: true,
+        keywords,
+        platforms,
+        data: {},
+        metadata: {
+          timestamp: new Date().toISOString(),
+          options
+        }
+      };
+      
+      // Voer scraping uit voor elk platform
+      for (const platform of platforms) {
+        try {
+          // Roep de juiste scraping methode aan op basis van het platform
+          const platformResults = await this.scrapingService.scrape(platform, keywords, options);
+          
+          if (platformResults && platformResults.items) {
+            results.data[platform] = platformResults;
+          }
+        } catch (error) {
+          console.error(`❌ Fout bij scrapen van ${platform}:`, error);
+          results.data[platform] = { error: error.message, items: [] };
+        }
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('❌ Fout bij ophalen van scraping resultaten:', error);
+      return {
+        success: false,
+        error: error.message,
+        keywords,
+        platforms,
+        data: {}
+      };
+    }
+  }
+  
+  /**
+   * Genereer mock scraping resultaten voor testen
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @param {Array<string>} platforms - Platforms om te scrapen
+   * @returns {Object} - Mock scraping resultaten
+   */
+  generateMockScrapingResults(keywords, platforms) {
+    console.log('🔄 Genereren van mock scraping resultaten');
+    
+    const results = {
+      success: true,
+      keywords,
+      platforms,
+      data: {},
+      metadata: {
+        timestamp: new Date().toISOString(),
+        isMock: true
+      }
+    };
+    
+    // Genereer mock data voor elk platform
+    for (const platform of platforms) {
+      switch (platform.toLowerCase()) {
+        case 'amazon':
+          results.data.amazon = this.generateMockAmazonResults(keywords);
+          break;
+        case 'reddit':
+          results.data.reddit = this.generateMockRedditResults(keywords);
+          break;
+        case 'tiktok':
+          results.data.tiktok = this.generateMockTikTokResults(keywords);
+          break;
+        case 'instagram':
+          results.data.instagram = this.generateMockInstagramResults(keywords);
+          break;
+        case 'trustpilot':
+          results.data.trustpilot = this.generateMockTrustpilotResults(keywords);
+          break;
+        default:
+          results.data[platform] = {
+            platform,
+            items: []
+          };
+      }
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Genereer mock Amazon resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Amazon resultaten
+   */
+  generateMockAmazonResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock producten
+    const numProducts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numProducts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        title: `${keyword} Product ${i + 1}`,
+        price: (Math.random() * 100 + 10).toFixed(2),
+        rating: (Math.random() * 2 + 3).toFixed(1), // 3.0 - 5.0 rating
+        reviewCount: Math.floor(Math.random() * 1000) + 1,
+        url: `https://amazon.com/product-${i + 1}`,
+        imageUrl: `https://example.com/images/product-${i + 1}.jpg`,
+        categories: [
+          'Elektronica',
+          'Computers',
+          'Software',
+          'Smart Home'
+        ].slice(0, Math.floor(Math.random() * 3) + 1),
+        features: [
+          'Gebruiksvriendelijk',
+          'Snelle levering',
+          'Hoge kwaliteit',
+          'Goede prijs-kwaliteitverhouding'
+        ].slice(0, Math.floor(Math.random() * 3) + 1)
+      });
+    }
+    
+    return {
+      platform: 'amazon',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Reddit resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Reddit resultaten
+   */
+  generateMockRedditResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock posts
+    const numPosts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numPosts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      const sentiments = ['positive', 'neutral', 'negative'];
+      const sentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+      
+      items.push({
+        title: `Wat denken jullie van ${keyword}?`,
+        content: `Ik heb onlangs ${keyword} ontdekt en ik vraag me af wat jullie ervaringen zijn. [meer tekst hier]`,
+        upvotes: Math.floor(Math.random() * 5000) + 1,
+        commentCount: Math.floor(Math.random() * 200) + 1,
+        url: `https://reddit.com/r/sample/comments/${i + 1}`,
+        subreddit: ['technology', 'marketing', 'business', 'startups'][Math.floor(Math.random() * 4)],
+        author: `user${Math.floor(Math.random() * 1000)}`,
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+        sentiment
+      });
+    }
+    
+    return {
+      platform: 'reddit',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock TikTok resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock TikTok resultaten
+   */
+  generateMockTikTokResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock videos
+    const numVideos = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numVideos; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        title: `${keyword} TikTok ${i + 1}`,
+        description: `Bekijk deze geweldige ${keyword} video! #trending #viral`,
+        views: Math.floor(Math.random() * 1000000) + 1000,
+        likes: Math.floor(Math.random() * 100000) + 100,
+        comments: Math.floor(Math.random() * 1000) + 10,
+        shares: Math.floor(Math.random() * 5000) + 50,
+        url: `https://tiktok.com/@user/video/${i + 1}`,
+        author: `tiktokuser${Math.floor(Math.random() * 1000)}`,
+        hashtags: ['trending', 'viral', keyword.toLowerCase().replace(' ', ''), 'fyp'],
+        duration: Math.floor(Math.random() * 60) + 15, // 15-75 seconden
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 14) * 86400000).toISOString()
+      });
+    }
+    
+    return {
+      platform: 'tiktok',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Instagram resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Instagram resultaten
+   */
+  generateMockInstagramResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock posts
+    const numPosts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numPosts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        caption: `Ontdek ${keyword} vandaag nog! #${keyword.toLowerCase().replace(' ', '')}`,
+        likes: Math.floor(Math.random() * 10000) + 100,
+        comments: Math.floor(Math.random() * 500) + 5,
+        url: `https://instagram.com/p/${i + 1}`,
+        imageUrl: `https://example.com/images/instagram-${i + 1}.jpg`,
+        author: `instauser${Math.floor(Math.random() * 1000)}`,
+        hashtags: ['marketing', 'business', keyword.toLowerCase().replace(' ', ''), 'instadaily'],
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+        engagement: Math.random() * 5 + 1 // 1-6% engagement rate
+      });
+    }
+    
+    return {
+      platform: 'instagram',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Trustpilot resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Trustpilot resultaten
+   */
+  generateMockTrustpilotResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock reviews
+    const numReviews = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numReviews; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      const rating = Math.floor(Math.random() * 5) + 1; // 1-5 sterren
+      const sentiments = ['positive', 'neutral', 'negative'];
+      const sentiment = rating >= 4 ? 'positive' : (rating <= 2 ? 'negative' : 'neutral');
+      
+      items.push({
+        title: `${rating >= 4 ? 'Geweldige' : (rating <= 2 ? 'Teleurstellende' : 'Gemiddelde')} ervaring met ${keyword}`,
+        content: `Ik heb ${keyword} gebruikt voor mijn bedrijf en vond het ${rating >= 4 ? 'uitstekend' : (rating <= 2 ? 'onder de maat' : 'acceptabel')}. [meer review tekst hier]`,
+        rating,
+        author: `reviewer${Math.floor(Math.random() * 1000)}`,
+        companyName: `${keyword} ${['BV', 'Inc', 'GmbH', 'Ltd'][Math.floor(Math.random() * 4)]}`,
+        url: `https://trustpilot.com/review/company-${i + 1}`,
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 90) * 86400000).toISOString(),
+        sentiment,
+        helpful: Math.floor(Math.random() * 50)
+      });
+    }
+    
+    return {
+      platform: 'trustpilot',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Haal scraping resultaten op voor specifieke keywords en platforms
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @param {Array<string>} platforms - Platforms om te scrapen (bijv. amazon, reddit, tiktok)
+   * @param {Object} options - Scraping opties
+   * @returns {Promise<Object>} - Scraping resultaten
+   */
+  async getScrapingResults(keywords, platforms = [], options = {}) {
+    console.log(`🔍 Scraping resultaten ophalen voor keywords: ${keywords.join(', ')} op platforms: ${platforms.join(', ')}`);
+    
+    try {
+      // Controleer of we mock data moeten gebruiken
+      if (process.env.USE_MOCK_DATA === 'true' || options.useMockData) {
+        console.log('🔄 Mock scraping data gebruiken');
+        return this.generateMockScrapingResults(keywords, platforms);
+      }
+      
+      // Initialiseer scraping service als die nog niet bestaat
+      if (!this.scrapingService) {
+        this.scrapingService = new ScrapingService();
+      }
+      
+      // Haal scraping resultaten op voor elk platform
+      const results = {
+        success: true,
+        keywords,
+        platforms,
+        data: {},
+        metadata: {
+          timestamp: new Date().toISOString(),
+          options
+        }
+      };
+      
+      // Voer scraping uit voor elk platform
+      for (const platform of platforms) {
+        try {
+          // Roep de juiste scraping methode aan op basis van het platform
+          const platformResults = await this.scrapingService.scrape(platform, keywords, options);
+          
+          if (platformResults && platformResults.items) {
+            results.data[platform] = platformResults;
+          }
+        } catch (error) {
+          console.error(`❌ Fout bij scrapen van ${platform}:`, error);
+          results.data[platform] = { error: error.message, items: [] };
+        }
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('❌ Fout bij ophalen van scraping resultaten:', error);
+      return {
+        success: false,
+        error: error.message,
+        keywords,
+        platforms,
+        data: {}
+      };
+    }
+  }
+  
+  /**
+   * Genereer mock scraping resultaten voor testen
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @param {Array<string>} platforms - Platforms om te scrapen
+   * @returns {Object} - Mock scraping resultaten
+   */
+  generateMockScrapingResults(keywords, platforms) {
+    console.log('🔄 Genereren van mock scraping resultaten');
+    
+    const results = {
+      success: true,
+      keywords,
+      platforms,
+      data: {},
+      metadata: {
+        timestamp: new Date().toISOString(),
+        isMock: true
+      }
+    };
+    
+    // Genereer mock data voor elk platform
+    for (const platform of platforms) {
+      switch (platform.toLowerCase()) {
+        case 'amazon':
+          results.data.amazon = this.generateMockAmazonResults(keywords);
+          break;
+        case 'reddit':
+          results.data.reddit = this.generateMockRedditResults(keywords);
+          break;
+        case 'tiktok':
+          results.data.tiktok = this.generateMockTikTokResults(keywords);
+          break;
+        case 'instagram':
+          results.data.instagram = this.generateMockInstagramResults(keywords);
+          break;
+        case 'trustpilot':
+          results.data.trustpilot = this.generateMockTrustpilotResults(keywords);
+          break;
+        default:
+          results.data[platform] = {
+            platform,
+            items: []
+          };
+      }
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Genereer mock Amazon resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Amazon resultaten
+   */
+  generateMockAmazonResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock producten
+    const numProducts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numProducts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        title: `${keyword} Product ${i + 1}`,
+        price: (Math.random() * 100 + 10).toFixed(2),
+        rating: (Math.random() * 2 + 3).toFixed(1), // 3.0 - 5.0 rating
+        reviewCount: Math.floor(Math.random() * 1000) + 1,
+        url: `https://amazon.com/product-${i + 1}`,
+        imageUrl: `https://example.com/images/product-${i + 1}.jpg`,
+        categories: [
+          'Elektronica',
+          'Computers',
+          'Software',
+          'Smart Home'
+        ].slice(0, Math.floor(Math.random() * 3) + 1),
+        features: [
+          'Gebruiksvriendelijk',
+          'Snelle levering',
+          'Hoge kwaliteit',
+          'Goede prijs-kwaliteitverhouding'
+        ].slice(0, Math.floor(Math.random() * 3) + 1)
+      });
+    }
+    
+    return {
+      platform: 'amazon',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Reddit resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Reddit resultaten
+   */
+  generateMockRedditResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock posts
+    const numPosts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numPosts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      const sentiments = ['positive', 'neutral', 'negative'];
+      const sentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+      
+      items.push({
+        title: `Wat denken jullie van ${keyword}?`,
+        content: `Ik heb onlangs ${keyword} ontdekt en ik vraag me af wat jullie ervaringen zijn. [meer tekst hier]`,
+        upvotes: Math.floor(Math.random() * 5000) + 1,
+        commentCount: Math.floor(Math.random() * 200) + 1,
+        url: `https://reddit.com/r/sample/comments/${i + 1}`,
+        subreddit: ['technology', 'marketing', 'business', 'startups'][Math.floor(Math.random() * 4)],
+        author: `user${Math.floor(Math.random() * 1000)}`,
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+        sentiment
+      });
+    }
+    
+    return {
+      platform: 'reddit',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock TikTok resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock TikTok resultaten
+   */
+  generateMockTikTokResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock videos
+    const numVideos = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numVideos; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        title: `${keyword} TikTok ${i + 1}`,
+        description: `Bekijk deze geweldige ${keyword} video! #trending #viral`,
+        views: Math.floor(Math.random() * 1000000) + 1000,
+        likes: Math.floor(Math.random() * 100000) + 100,
+        comments: Math.floor(Math.random() * 1000) + 10,
+        shares: Math.floor(Math.random() * 5000) + 50,
+        url: `https://tiktok.com/@user/video/${i + 1}`,
+        author: `tiktokuser${Math.floor(Math.random() * 1000)}`,
+        hashtags: ['trending', 'viral', keyword.toLowerCase().replace(' ', ''), 'fyp'],
+        duration: Math.floor(Math.random() * 60) + 15, // 15-75 seconden
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 14) * 86400000).toISOString()
+      });
+    }
+    
+    return {
+      platform: 'tiktok',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Instagram resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Instagram resultaten
+   */
+  generateMockInstagramResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock posts
+    const numPosts = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numPosts; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      
+      items.push({
+        caption: `Ontdek ${keyword} vandaag nog! #${keyword.toLowerCase().replace(' ', '')}`,
+        likes: Math.floor(Math.random() * 10000) + 100,
+        comments: Math.floor(Math.random() * 500) + 5,
+        url: `https://instagram.com/p/${i + 1}`,
+        imageUrl: `https://example.com/images/instagram-${i + 1}.jpg`,
+        author: `instauser${Math.floor(Math.random() * 1000)}`,
+        hashtags: ['marketing', 'business', keyword.toLowerCase().replace(' ', ''), 'instadaily'],
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+        engagement: Math.random() * 5 + 1 // 1-6% engagement rate
+      });
+    }
+    
+    return {
+      platform: 'instagram',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Genereer mock Trustpilot resultaten
+   * @param {Array<string>} keywords - Keywords om te zoeken
+   * @returns {Object} - Mock Trustpilot resultaten
+   */
+  generateMockTrustpilotResults(keywords) {
+    const items = [];
+    
+    // Genereer 5-10 mock reviews
+    const numReviews = Math.floor(Math.random() * 6) + 5;
+    
+    for (let i = 0; i < numReviews; i++) {
+      const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+      const rating = Math.floor(Math.random() * 5) + 1; // 1-5 sterren
+      const sentiments = ['positive', 'neutral', 'negative'];
+      const sentiment = rating >= 4 ? 'positive' : (rating <= 2 ? 'negative' : 'neutral');
+      
+      items.push({
+        title: `${rating >= 4 ? 'Geweldige' : (rating <= 2 ? 'Teleurstellende' : 'Gemiddelde')} ervaring met ${keyword}`,
+        content: `Ik heb ${keyword} gebruikt voor mijn bedrijf en vond het ${rating >= 4 ? 'uitstekend' : (rating <= 2 ? 'onder de maat' : 'acceptabel')}. [meer review tekst hier]`,
+        rating,
+        author: `reviewer${Math.floor(Math.random() * 1000)}`,
+        companyName: `${keyword} ${['BV', 'Inc', 'GmbH', 'Ltd'][Math.floor(Math.random() * 4)]}`,
+        url: `https://trustpilot.com/review/company-${i + 1}`,
+        postedAt: new Date(Date.now() - Math.floor(Math.random() * 90) * 86400000).toISOString(),
+        sentiment,
+        helpful: Math.floor(Math.random() * 50)
+      });
+    }
+    
+    return {
+      platform: 'trustpilot',
+      items,
+      totalResults: items.length,
+      searchTerms: keywords
+    };
+  }
+  
+  /**
+   * Voer een volledige marktanalyse uit
+   * @param {Object} data - Marktgegevens en concurrentiegegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - Marktanalyse resultaten
+   */
+  async analyzeMarket(data, options = {}) {
+    try {
+      // Valideer input
+      if (!data) {
+        console.warn('⚠️ Market research: Ongeldige data ontvangen');
+        return {
+          success: false,
+          error: 'Ongeldige data ontvangen',
+          results: {}
+        };
+      }
+      
+      // Initialiseer resultaten object
+      const results = {
+        marketSize: null,
+        segmentation: null,
+        trends: null,
+        priceAnalysis: null,
+        competitorAnalysis: null,
+        gapOpportunities: null,
+        swotAnalysis: null,
+        visualizationData: {},
+        metadata: {
+          timestamp: new Date().toISOString(),
+          dataPoints: this.countDataPoints(data),
+          options
+        }
+      };
+      
+      // Voer marktomvang schatting uit
+      if (data.marketData) {
+        results.marketSize = await this.estimateMarketSize(data.marketData, options);
+      }
+      
+      // Voer marktsegmentatie uit
+      if (data.demographicData || data.psychographicData) {
+        results.segmentation = await this.segmentMarket(
+          data.demographicData,
+          data.psychographicData,
+          options
+        );
+      }
+      
+      // Voer trendanalyse uit
+      if (data.trendData || data.historicalData) {
+        results.trends = await this.analyzeTrends(
+          data.trendData || data.historicalData,
+          options
+        );
+      }
+      
+      // Voer prijsanalyse uit
+      if (data.priceData || (data.competitorData && data.competitorData.some(c => c.pricing))) {
+        results.priceAnalysis = await this.analyzePricing(
+          data.priceData || data.competitorData,
+          options
+        );
+      }
+      
+      // Voer concurrentieanalyse uit
+      if (data.competitorData) {
+        results.competitorAnalysis = await this.analyzeCompetitors(
+          data.competitorData,
+          options
+        );
+        
+        // Genereer SWOT-analyses voor concurrenten
+        results.swotAnalysis = await this.generateCompetitorSWOT(
+          data.competitorData,
+          options
+        );
+      }
+      
+      // Identificeer gaps en opportunities
+      if (results.marketSize && results.segmentation && results.competitorAnalysis) {
+        results.gapOpportunities = await this.identifyGapOpportunities(
+          results.marketSize,
+          results.segmentation,
+          results.competitorAnalysis,
+          options
+        );
+      }
+      
+      // Bereid visualisatiedata voor
+      results.visualizationData = this.prepareVisualizationData(results);
+      
+      return {
+        success: true,
+        results
+      };
+    } catch (error) {
+      console.error('❌ Fout bij marktanalyse:', error);
+      return {
+        success: false,
+        error: error.message,
+        results: {}
+      };
+    }
+  }
+  
+  /**
+   * Tel het aantal datapunten in de input data
+   * @param {Object} data - Input data
+   * @returns {Number} - Aantal datapunten
+   */
+  countDataPoints(data) {
+    let count = 0;
+    
+    // Recursieve functie om datapunten te tellen
+    const countRecursive = (obj) => {
+      if (!obj) return 0;
+      
+      if (Array.isArray(obj)) {
+        return obj.reduce((sum, item) => sum + countRecursive(item), 0);
+      } else if (typeof obj === 'object') {
+        return Object.values(obj).reduce((sum, value) => sum + countRecursive(value), 0);
+      } else {
+        return 1; // Elk primitief datapunt telt als 1
+      }
+    };
+    
+    return countRecursive(data);
+  }
+  
+  /**
+   * Schat de marktomvang op basis van marktgegevens
+   * @param {Object} marketData - Marktgegevens
+   * @param {Object} options - Schattingsopties
+   * @returns {Promise<Object>} - Geschatte marktomvang
+   */
+  async estimateMarketSize(marketData, options = {}) {
+    return this.marketSizeEstimator.estimate(marketData, options);
+  }
+  
+  /**
+   * Segmenteer de markt op basis van demografische en psychografische gegevens
+   * @param {Object} demographicData - Demografische gegevens
+   * @param {Object} psychographicData - Psychografische gegevens
+   * @param {Object} options - Segmentatieopties
+   * @returns {Promise<Object>} - Marktsegmentatie resultaten
+   */
+  async segmentMarket(demographicData, psychographicData, options = {}) {
+    return this.marketSegmentation.segment(demographicData, psychographicData, options);
+  }
+  
+  /**
+   * Analyseer trends op basis van historische gegevens
+   * @param {Object} trendData - Trend- of historische gegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - Trendanalyse resultaten
+   */
+  async analyzeTrends(trendData, options = {}) {
+    return this.trendAnalyzer.analyze(trendData, options);
+  }
+  
+  /**
+   * Analyseer prijzen op basis van prijsgegevens
+   * @param {Object} priceData - Prijsgegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - Prijsanalyse resultaten
+   */
+  async analyzePricing(priceData, options = {}) {
+    return this.priceAnalyzer.analyze(priceData, options);
+  }
+  
+  /**
+   * Analyseer concurrenten op basis van concurrentiegegevens
+   * @param {Array<Object>} competitorData - Concurrentiegegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - Concurrentieanalyse resultaten
+   */
+  async analyzeCompetitors(competitorData, options = {}) {
+    return this.competitorAnalyzer.analyze(competitorData, options);
+  }
+  
+  /**
+   * Genereer SWOT-analyses voor concurrenten
+   * @param {Array<Object>} competitorData - Concurrentiegegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - SWOT-analyse resultaten
+   */
+  async generateCompetitorSWOT(competitorData, options = {}) {
+    return this.competitorAnalyzer.generateSWOT(competitorData, options);
+  }
+  
+  /**
+   * Identificeer gaps en opportunities op basis van marktanalyse
+   * @param {Object} marketSize - Marktomvang gegevens
+   * @param {Object} segmentation - Segmentatie gegevens
+   * @param {Object} competitorAnalysis - Concurrentieanalyse gegevens
+   * @param {Object} options - Analyse-opties
+   * @returns {Promise<Object>} - Geïdentificeerde gaps en opportunities
+   */
+  async identifyGapOpportunities(marketSize, segmentation, competitorAnalysis, options = {}) {
+    return this.gapOpportunityIdentifier.identify(
+      marketSize,
+      segmentation,
+      competitorAnalysis,
+      options
+    );
+  }
+  
+  /**
+   * Bereid data voor voor visualisatie
+   * @param {Object} results - Marktanalyse resultaten
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareVisualizationData(results) {
+    const visualizationData = {
+      marketSize: this.prepareMarketSizeVisualization(results.marketSize),
+      segmentation: this.prepareSegmentationVisualization(results.segmentation),
+      trends: this.prepareTrendsVisualization(results.trends),
+      pricing: this.preparePricingVisualization(results.priceAnalysis),
+      competitors: this.prepareCompetitorVisualization(results.competitorAnalysis),
+      swot: this.prepareSWOTVisualization(results.swotAnalysis),
+      gapOpportunities: this.prepareGapOpportunitiesVisualization(results.gapOpportunities)
+    };
+    
+    return visualizationData;
+  }
+  
+  /**
+   * Bereid marktomvang data voor voor visualisatie
+   * @param {Object} marketSizeData - Marktomvang gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareMarketSizeVisualization(marketSizeData) {
+    if (!marketSizeData) return null;
+    
+    return {
+      totalMarketSize: marketSizeData.totalMarketSize,
+      segmentSizes: marketSizeData.segmentSizes,
+      growthRate: marketSizeData.growthRate,
+      forecast: marketSizeData.forecast
+    };
+  }
+  
+  /**
+   * Bereid segmentatie data voor voor visualisatie
+   * @param {Object} segmentationData - Segmentatie gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareSegmentationVisualization(segmentationData) {
+    if (!segmentationData) return null;
+    
+    return {
+      demographic: segmentationData.demographic,
+      psychographic: segmentationData.psychographic,
+      segments: segmentationData.segments
+    };
+  }
+  
+  /**
+   * Bereid trends data voor voor visualisatie
+   * @param {Object} trendsData - Trends gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareTrendsVisualization(trendsData) {
+    if (!trendsData) return null;
+    
+    return {
+      trends: trendsData.trends,
+      forecast: trendsData.forecast,
+      seasonality: trendsData.seasonality
+    };
+  }
+  
+  /**
+   * Bereid prijsanalyse data voor voor visualisatie
+   * @param {Object} pricingData - Prijsanalyse gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  preparePricingVisualization(pricingData) {
+    if (!pricingData) return null;
+    
+    return {
+      priceRange: pricingData.priceRange,
+      priceDistribution: pricingData.priceDistribution,
+      competitivePricing: pricingData.competitivePricing
+    };
+  }
+  
+  /**
+   * Bereid concurrentieanalyse data voor voor visualisatie
+   * @param {Object} competitorData - Concurrentieanalyse gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareCompetitorVisualization(competitorData) {
+    if (!competitorData) return null;
+    
+    return {
+      competitorPositioning: competitorData.positioning,
+      marketShare: competitorData.marketShare,
+      competitiveAdvantages: competitorData.competitiveAdvantages
+    };
+  }
+  
+  /**
+   * Bereid SWOT-analyse data voor voor visualisatie
+   * @param {Object} swotData - SWOT-analyse gegevens
+   * @returns {Object} - Data voor visualisatie
+   */
+  prepareSWOTVisualization(swotData) {
+    if (!swotData) return null;
+    
+    return {
+      swotAnalyses: swotData.competitors
+    };
+  }
+  
+  /**
+ * Bereid gap-opportunity data voor voor visualisatie
+ * @param {Object} gapOpportunitiesData - Gap-opportunity gegevens
+ * @returns {Object} - Data voor visualisatie
+
+/**
+ * Krijg een singleton instance van de MarketResearchService
+ * @returns {MarketResearchService} - MarketResearchService instance
+ */
+const getMarketResearchService = () => {
+  if (!instance) {
+    instance = new MarketResearchService();
+  }
+  return instance;
+};
+
+module.exports = getMarketResearchService;
+module.exports.MarketResearchService = MarketResearchService;
+
+  /**
+   * Genereer marktinzichten op basis van marktanalyse
+   * @param {Object} marketData - Marktgegevens
+   * @param {Object} options - Opties voor het genereren van inzichten
+   * @returns {Promise<Object>} - Gegenereerde marktinzichten
+   */
+  async generateMarketInsights(marketData, options = {}) {
+  try {
+    console.log('🧠 Genereren van marktinzichten gestart');
+    
+    // Controleer of we in testmodus zijn
+    const isTestMode = process.env.NODE_ENV === 'development' || process.env.USE_MOCK_DATA === 'true';
+    
+    // Haal scraping resultaten op als die beschikbaar zijn in de input
+    let scrapingResults = marketData.scrapingResults;
+    
+    // Als er geen scraping resultaten zijn meegegeven, maar wel keywords, probeer dan te scrapen
+    if (!scrapingResults && marketData.keywords && marketData.keywords.length > 0) {
+      console.log(`🔍 Ophalen van scraping resultaten voor keywords: ${marketData.keywords.join(', ')}`);
+      
+      try {
+        const platforms = marketData.platforms || ['amazon', 'reddit', 'trustpilot'];
+        const scrapingResponse = await this.getScrapingResults(marketData.keywords, platforms, options.scrapingOptions || {});
+        
+        if (scrapingResponse.success) {
+          scrapingResults = scrapingResponse.results;
+          console.log('✅ Scraping resultaten succesvol opgehaald');
+        } else {
+          console.warn(`⚠️ Fout bij ophalen van scraping resultaten: ${scrapingResponse.error}`);
+          // Doorgaan zonder scraping resultaten
+        }
+      } catch (scrapingError) {
+        console.error('❌ Fout bij scraping:', scrapingError);
+        // Doorgaan zonder scraping resultaten
+      }
+    }
+    
+    // Voer een marktanalyse uit
+    const marketAnalysis = await this.analyzeMarket(marketData, options);
+    
+    if (!marketAnalysis.success) {
+      return {
+        success: false,
+        error: marketAnalysis.error
+      };
+    }
+    
+    const results = marketAnalysis.results;
+    
+    // Verrijk de resultaten met scraping data als die beschikbaar is
+    if (scrapingResults) {
+      results.scrapingData = scrapingResults;
+      
+      // Verrijk de marktanalyse met scraping inzichten
+      this.enrichAnalysisWithScrapingData(results, scrapingResults);
+    }
+    
+    // Genereer inzichten op basis van de marktanalyse
+    const insights = {
+      marketOverview: this.generateMarketOverview(results),
+      keyOpportunities: this.identifyKeyOpportunities(results),
+      competitiveLandscape: this.summarizeCompetitiveLandscape(results),
+      recommendations: this.generateRecommendations(results),
+      marketTrends: this.extractMarketTrends(results),
+      metadata: {
+        timestamp: new Date().toISOString(),
+        source: 'MarketPulse AI',
+        confidence: this.calculateInsightConfidence(results),
+        dataSource: isTestMode ? 'mock' : 'analysis'
+      }
+    };
+    
+    // Voeg scraping inzichten toe als die beschikbaar zijn
+    if (scrapingResults) {
+      insights.scrapingInsights = this.generateScrapingInsights(scrapingResults);
+    }
+    
+    return {
+      success: true,
+      insights
+    };
+  } catch (error) {
+    console.error('❌ Error in generateMarketInsights:', error);
+    return {
+      success: false,
+      error: 'Fout bij het genereren van marktinzichten: ' + error.message
+    };
+  }
+};
+
+/**
+ * Genereer een marktoverzicht op basis van marktanalyse
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Marktoverzicht
+ */
+MarketResearchService.prototype.generateMarketOverview = function(results) {
+  const overview = {
+    size: results.marketSize?.totalMarketSize || 0,
+    growthRate: results.marketSize?.growthRate || 0,
+    segments: results.segmentation?.segments || [],
+    topTrends: (results.trends?.trends || []).slice(0, 3),
+    competitorCount: results.competitorAnalysis?.competitors?.length || 0
+  };
+  
+  return overview;
+};
+
+/**
+ * Identificeer de belangrijkste kansen op basis van marktanalyse
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Array} - Belangrijkste kansen
+ */
+MarketResearchService.prototype.identifyKeyOpportunities = function(results) {
+  // Haal kansen op uit gap-opportunity analyse
+  const opportunities = results.gapOpportunities?.opportunities || [];
+  
+  // Sorteer op score en neem de top 5
+  return opportunities
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+    .map(opp => ({
+      name: opp.name,
+      description: opp.description,
+      potentialMarketSize: opp.potentialMarketSize,
+      riskLevel: opp.riskLevel
+    }));
+};
+
+/**
+ * Vat het concurrentielandschap samen op basis van marktanalyse
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Samenvatting van het concurrentielandschap
+ */
+MarketResearchService.prototype.summarizeCompetitiveLandscape = function(results) {
+  const competitorAnalysis = results.competitorAnalysis;
+  
+  if (!competitorAnalysis) {
+    return null;
+  }
+  
+  return {
+    marketConcentration: competitorAnalysis.marketShare?.concentration || 'unknown',
+    topCompetitors: (competitorAnalysis.competitors || [])
+      .sort((a, b) => (b.marketShare || 0) - (a.marketShare || 0))
+      .slice(0, 3)
+      .map(comp => ({
+        name: comp.name,
+        marketShare: comp.marketShare || 0,
+        strengths: comp.strengths || []
+      })),
+    ownPosition: this.findOwnPosition(competitorAnalysis)
+  };
+};
+
+/**
+ * Vind de eigen positie in het concurrentielandschap
+ * @param {Object} competitorAnalysis - Concurrentieanalyse resultaten
+ * @returns {Object} - Eigen positie
+ */
+MarketResearchService.prototype.findOwnPosition = function(competitorAnalysis) {
+  if (!competitorAnalysis || !competitorAnalysis.competitors) {
+    return null;
+  }
+  
+  const ownCompany = competitorAnalysis.competitors.find(c => 
+    c.isOwn || c.name === 'Own' || c.name === 'Self'
+  );
+  
+  if (!ownCompany) {
+    return null;
+  }
+  
+  return {
+    marketShare: ownCompany.marketShare || 0,
+    positioning: ownCompany.positioning || {},
+    strengths: ownCompany.strengths || [],
+    weaknesses: ownCompany.weaknesses || []
+  };
+};
+
+/**
+ * Haal scraping resultaten op voor specifieke keywords en platforms
+ * @param {Array<String>} keywords - Keywords om te scrapen
+ * @param {Array<String>} platforms - Platforms om te scrapen (bijv. 'amazon', 'reddit', 'tiktok')
+ * @param {Object} options - Scraping opties
+ * @returns {Promise<Object>} - Scraping resultaten
+ */
+MarketResearchService.prototype.getScrapingResults = async function(keywords, platforms = [], options = {}) {
+  try {
+    console.log(`🔍 Ophalen van scraping resultaten voor keywords: ${keywords.join(', ')}`);
+    console.log(`🌐 Platforms: ${platforms.join(', ')}`);
+    
+    // Valideer input
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+      console.warn('⚠️ Geen geldige keywords verstrekt voor scraping');
+      return {
+        success: false,
+        error: 'Geen geldige keywords verstrekt',
+        results: []
+      };
+    }
+    
+    // Standaard platforms als geen zijn opgegeven
+    const targetPlatforms = platforms.length > 0 ? platforms : ['amazon', 'reddit', 'trustpilot'];
+    
+    // Resultaten object initialiseren
+    const results = {
+      keywords,
+      platforms: targetPlatforms,
+      data: {},
+      timestamp: new Date().toISOString()
+    };
+    
+    // Controleer of we in testmodus zijn
+    const isTestMode = process.env.NODE_ENV === 'development' || process.env.USE_MOCK_DATA === 'true';
+    
+    if (isTestMode) {
+      console.log('🛠 Gebruik mock scraping resultaten (test modus)');
+      
+      // Genereer mock resultaten voor elk platform
+      for (const platform of targetPlatforms) {
+        results.data[platform] = this.generateMockScrapingResults(keywords, platform, options);
+      }
+      
+      return {
+        success: true,
+        results
+      };
+    }
+    
+    // In productie: gebruik echte scraping service
+    try {
+      // Maak een project ID aan voor deze scraping sessie
+      const projectId = `market_research_${Date.now()}`;
+      
+      // Verzamel resultaten van elk platform
+      for (const platform of targetPlatforms) {
+        // Haal de juiste scraper op voor dit platform
+        const scraper = ScrapingService.platforms[platform];
+        
+        if (!scraper) {
+          console.warn(`⚠️ Geen scraper gevonden voor platform: ${platform}`);
+          results.data[platform] = { error: `Platform ${platform} wordt niet ondersteund` };
+          continue;
+        }
+        
+        // Maak een scrape job aan voor elk keyword
+        const jobs = [];
+        
+        for (const keyword of keywords) {
+          try {
+            // Bepaal het type scrape job op basis van het platform
+            let job;
+            
+            switch (platform) {
+              case 'amazon':
+                // Zoek naar producten op Amazon
+                job = await scraper.createSearchScrapeJob(projectId, [keyword], options);
+                break;
+              case 'reddit':
+                // Zoek naar subreddits en posts op Reddit
+                job = await scraper.createSearchScrapeJob(projectId, [keyword], options);
+                break;
+              case 'tiktok':
+                // Zoek naar hashtags op TikTok
+                job = await scraper.createHashtagScrapeJob(projectId, [`#${keyword.replace(/\s+/g, '')}`], options);
+                break;
+              case 'instagram':
+                // Zoek naar hashtags op Instagram
+                job = await scraper.createHashtagScrapeJob(projectId, [`#${keyword.replace(/\s+/g, '')}`], options);
+                break;
+              case 'trustpilot':
+                // Zoek naar bedrijven op Trustpilot
+                job = await scraper.createCompanyScrapeJob(projectId, [keyword], options);
+                break;
+              default:
+                throw new Error(`Platform ${platform} wordt niet ondersteund`);
+            }
+            
+            jobs.push(job);
+          } catch (error) {
+            console.error(`❌ Fout bij aanmaken van scrape job voor ${platform} en keyword ${keyword}:`, error);
+          }
+        }
+        
+        // Wacht op resultaten van alle jobs
+        const platformResults = [];
+        
+        for (const job of jobs) {
+          try {
+            // Wacht op voltooiing van de job (met timeout)
+            const jobResults = await ScrapingService.getJobResults(job.id);
+            platformResults.push(...jobResults);
+          } catch (error) {
+            console.error(`❌ Fout bij ophalen van resultaten voor job ${job.id}:`, error);
+          }
+        }
+        
+        // Verwerk resultaten voor dit platform
+        results.data[platform] = this.processScrapingResults(platformResults, platform);
+      }
+      
+      return {
+        success: true,
+        results
+      };
+    } catch (error) {
+      console.error('❌ Fout bij scraping:', error);
+      return {
+        success: false,
+        error: `Fout bij scraping: ${error.message}`,
+        results
+      };
+    }
+  } catch (error) {
+    console.error('❌ Onverwachte fout in getScrapingResults:', error);
+    return {
+      success: false,
+      error: `Onverwachte fout: ${error.message}`,
+      results: {}
+    };
+  }
+};
+
+/**
+ * Genereer mock scraping resultaten voor een platform
+ * @param {Array<String>} keywords - Keywords
+ * @param {String} platform - Platform
+ * @param {Object} options - Opties
+ * @returns {Object} - Mock resultaten
+ */
+MarketResearchService.prototype.generateMockScrapingResults = function(keywords, platform, options = {}) {
+  // Basis resultaten structuur
+  const results = {
+    platform,
+    keywords,
+    items: [],
+    metadata: {
+      timestamp: new Date().toISOString(),
+      source: 'mock',
+      options
+    }
+  };
+  
+  // Genereer verschillende mock data per platform
+  switch (platform) {
+    case 'amazon':
+      // Mock Amazon product resultaten
+      for (const keyword of keywords) {
+        for (let i = 1; i <= 5; i++) {
+          results.items.push({
+            type: 'product',
+            title: `${keyword} Product ${i}`,
+            price: Math.floor(Math.random() * 100) + 9.99,
+            rating: (Math.random() * 2 + 3).toFixed(1),
+            reviewCount: Math.floor(Math.random() * 1000) + 10,
+            url: `https://amazon.com/dp/B0${Math.floor(Math.random() * 10000000)}`,
+            image: `https://example.com/images/product${i}.jpg`,
+            description: `Dit is een geweldig ${keyword} product met veel functies.`,
+            features: [
+              `Feature 1 voor ${keyword}`,
+              `Feature 2 voor ${keyword}`,
+              `Feature 3 voor ${keyword}`
+            ],
+            categories: [
+              'Elektronica',
+              'Computers',
+              'Software'
+            ]
+          });
+        }
+      }
+      break;
+    
+    case 'reddit':
+      // Mock Reddit post resultaten
+      for (const keyword of keywords) {
+        for (let i = 1; i <= 5; i++) {
+          results.items.push({
+            type: 'post',
+            title: `${keyword} Discussie ${i}`,
+            content: `Dit is een discussie over ${keyword} en waarom het belangrijk is. Veel mensen hebben verschillende meningen hierover.`,
+            author: `user${Math.floor(Math.random() * 1000)}`,
+            upvotes: Math.floor(Math.random() * 5000),
+            commentCount: Math.floor(Math.random() * 200),
+            subreddit: `r/${keyword.toLowerCase().replace(/\s+/g, '')}`,
+            url: `https://reddit.com/r/${keyword.toLowerCase().replace(/\s+/g, '')}/comments/${Math.random().toString(36).substring(2, 8)}`,
+            created: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+            sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)]
+          });
+        }
+      }
+      break;
+    
+    case 'trustpilot':
+      // Mock Trustpilot review resultaten
+      for (const keyword of keywords) {
+        const companyName = `${keyword} Corp`;
+        const overallRating = (Math.random() * 2 + 3).toFixed(1);
+        
+        results.items.push({
+          type: 'company',
+          name: companyName,
+          rating: overallRating,
+          reviewCount: Math.floor(Math.random() * 1000) + 50,
+          url: `https://trustpilot.com/review/${companyName.toLowerCase().replace(/\s+/g, '-')}`,
+          reviews: Array.from({ length: 5 }, (_, i) => ({
+            title: `${['Geweldige', 'Goede', 'Redelijke', 'Matige', 'Slechte'][i]} ervaring met ${companyName}`,
+            content: `Ik had een ${['geweldige', 'goede', 'redelijke', 'matige', 'slechte'][i]} ervaring met ${companyName}. ${['Zou het zeker aanraden!', 'Best tevreden.', 'Het was oké.', 'Niet helemaal wat ik verwachtte.', 'Zou het niet aanraden.'][i]}`,
+            rating: 5 - i,
+            author: `reviewer${Math.floor(Math.random() * 1000)}`,
+            date: new Date(Date.now() - Math.floor(Math.random() * 90) * 86400000).toISOString(),
+            sentiment: ['positive', 'positive', 'neutral', 'negative', 'negative'][i]
+          }))
+        });
+      }
+      break;
+    
+    case 'tiktok':
+      // Mock TikTok video resultaten
+      for (const keyword of keywords) {
+        for (let i = 1; i <= 5; i++) {
+          results.items.push({
+            type: 'video',
+            title: `#${keyword.replace(/\s+/g, '')} Trend ${i}`,
+            description: `Check deze ${keyword} video! #${keyword.replace(/\s+/g, '')} #trending`,
+            author: `@creator${Math.floor(Math.random() * 1000)}`,
+            likes: Math.floor(Math.random() * 100000),
+            comments: Math.floor(Math.random() * 5000),
+            shares: Math.floor(Math.random() * 20000),
+            views: Math.floor(Math.random() * 1000000),
+            url: `https://tiktok.com/@creator${Math.floor(Math.random() * 1000)}/video/${Math.floor(Math.random() * 1000000000)}`,
+            created: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+            hashtags: [
+              `#${keyword.replace(/\s+/g, '')}`,
+              '#trending',
+              '#viral'
+            ]
+          });
+        }
+      }
+      break;
+    
+    case 'instagram':
+      // Mock Instagram post resultaten
+      for (const keyword of keywords) {
+        for (let i = 1; i <= 5; i++) {
+          results.items.push({
+            type: 'post',
+            caption: `${keyword} is geweldig! Check deze post! #${keyword.replace(/\s+/g, '')} #instatrend`,
+            author: `@instauser${Math.floor(Math.random() * 1000)}`,
+            likes: Math.floor(Math.random() * 50000),
+            comments: Math.floor(Math.random() * 2000),
+            url: `https://instagram.com/p/${Math.random().toString(36).substring(2, 8)}`,
+            image: `https://example.com/images/insta${i}.jpg`,
+            created: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+            hashtags: [
+              `#${keyword.replace(/\s+/g, '')}`,
+              '#instatrend',
+              '#picoftheday'
+            ]
+          });
+        }
+      }
+      break;
+    
+    default:
+      // Generieke mock resultaten voor niet-ondersteunde platforms
+      results.items = keywords.map(keyword => ({
+        keyword,
+        results: `Mock resultaten voor ${keyword} op ${platform}`,
+        timestamp: new Date().toISOString()
+      }));
+  }
+  
+  return results;
+};
+
+/**
+ * Verwerk scraping resultaten voor een platform
+ * @param {Array<Object>} results - Ruwe scraping resultaten
+ * @param {String} platform - Platform
+ * @returns {Object} - Verwerkte resultaten
+ */
+MarketResearchService.prototype.processScrapingResults = function(results, platform) {
+  // Implementeer hier de verwerking van echte scraping resultaten
+  // Voor nu geven we gewoon de ruwe resultaten terug
+  return {
+    platform,
+    items: results,
+    processed: true,
+    timestamp: new Date().toISOString()
+  };
+};
+
+/**
+ * Genereer aanbevelingen op basis van marktanalyse
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Array} - Aanbevelingen
+ */
+MarketResearchService.prototype.generateRecommendations = function(results) {
+  const recommendations = [];
+  
+  // Aanbevelingen op basis van marktomvang en groei
+  if (results.marketSize) {
+    if (results.marketSize.growthRate > 0.1) {
+      recommendations.push({
+        category: 'Groei',
+        recommendation: 'Investeer in capaciteitsuitbreiding om te profiteren van de snelle marktgroei',
+        priority: 'Hoog'
+      });
+    } else if (results.marketSize.growthRate < 0.02) {
+      recommendations.push({
+        category: 'Groei',
+        recommendation: 'Focus op marktaandeelgroei in plaats van te rekenen op algemene marktgroei',
+        priority: 'Medium'
+      });
+    }
+  }
+  
+  // Aanbevelingen op basis van kansen
+  const opportunities = results.gapOpportunities?.opportunities || [];
+  if (opportunities.length > 0) {
+    const topOpportunity = opportunities.sort((a, b) => b.score - a.score)[0];
+    recommendations.push({
+      category: 'Kansen',
+      recommendation: `Ontwikkel aanbod voor: ${topOpportunity.name}`,
+      priority: 'Hoog'
+    });
+  }
+  
+  // Aanbevelingen op basis van concurrentieanalyse
+  if (results.competitorAnalysis?.swotAnalysis) {
+    const swot = results.competitorAnalysis.swotAnalysis;
+    
+    if (swot.weaknesses && swot.weaknesses.length > 0) {
+      recommendations.push({
+        category: 'Concurrentie',
+        recommendation: `Versterk zwakke punten: ${swot.weaknesses[0]}`,
+        priority: 'Medium'
+      });
+    }
+    
+    if (swot.threats && swot.threats.length > 0) {
+      recommendations.push({
+        category: 'Risico',
+        recommendation: `Ontwikkel strategie voor bedreiging: ${swot.threats[0]}`,
+        priority: 'Hoog'
+      });
+    }
+  }
+  
+  // Aanbevelingen op basis van prijsanalyse
+  if (results.priceAnalysis?.priceElasticity) {
+    const elasticity = results.priceAnalysis.priceElasticity;
+    
+    if (elasticity.elasticityType === 'inelastic') {
+      recommendations.push({
+        category: 'Prijsstrategie',
+        recommendation: 'Overweeg een prijsverhoging, aangezien de vraag relatief inelastisch is',
+        priority: 'Medium'
+      });
+    } else if (elasticity.elasticityType === 'elastic') {
+      recommendations.push({
+        category: 'Prijsstrategie',
+        recommendation: 'Overweeg een prijsverlaging om marktaandeel te winnen, aangezien de vraag elastisch is',
+        priority: 'Medium'
+      });
+    }
+  }
+  
+  return recommendations;
+};
+
+/**
+ * Bereken de betrouwbaarheid van de gegenereerde inzichten
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Number} - Betrouwbaarheidsscore (0-1)
+ */
+MarketResearchService.prototype.calculateInsightConfidence = function(results) {
+  let confidenceSum = 0;
+  let componentCount = 0;
+  
+  // Tel de betrouwbaarheid van alle componenten
+  if (results.marketSize) {
+    confidenceSum += results.marketSize.confidence || 0.5;
+    componentCount++;
+  }
+  
+  if (results.segmentation) {
+    confidenceSum += results.segmentation.confidence || 0.5;
+    componentCount++;
+  }
+  
+  if (results.trends) {
+    confidenceSum += results.trends.confidence || 0.5;
+    componentCount++;
+  }
+  
+  if (results.priceAnalysis) {
+    confidenceSum += results.priceAnalysis.confidence || 0.5;
+    componentCount++;
+  }
+  
+  if (results.competitorAnalysis) {
+    confidenceSum += results.competitorAnalysis.confidence || 0.5;
+    componentCount++;
+  }
+  
+  if (results.gapOpportunities) {
+    confidenceSum += results.gapOpportunities.confidence || 0.5;
+    componentCount++;
+  }
+  
+  // Bereken gemiddelde betrouwbaarheid
+  return componentCount > 0 ? confidenceSum / componentCount : 0.5;
+};
+
+/**
+ * Sla een marktonderzoeksrapport op in de database
+ * @param {Object} reportData - Rapportgegevens
+ * @returns {Promise<Object>} - Resultaat van de opslagoperatie
+ */
+MarketResearchService.prototype.saveReport = async function(reportData) {
+  try {
+    // Valideer input
+    if (!reportData) {
+      return {
+        success: false,
+        error: 'Geen rapportgegevens verstrekt'
+      };
+    }
+    
+    // Voeg metadata toe
+    const report = {
+      ...reportData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      id: reportData.id || crypto.randomUUID()
+    };
+    
+    // TODO: Implementeer daadwerkelijke opslag in database
+    console.log('💾 Rapport opgeslagen:', report.id);
+    
+    return {
+      success: true,
+      reportId: report.id
+    };
+  } catch (error) {
+    console.error('❌ Error in saveReport:', error);
+    return {
+      success: false,
+      error: 'Fout bij het opslaan van het rapport: ' + error.message
+    };
+  }
+};
+
+/**
+ * Haal een marktonderzoeksrapport op uit de database
+ * @param {String} reportId - Rapport ID
+ * @param {String} userId - Gebruikers ID
+ * @returns {Promise<Object>} - Opgehaald rapport
+ */
+MarketResearchService.prototype.getReport = async function(reportId, userId) {
+  try {
+    // Valideer input
+    if (!reportId) {
+      return null;
+    }
+    
+    // TODO: Implementeer daadwerkelijke ophalen uit database
+    console.log(`🔍 Rapport ophalen: ${reportId} voor gebruiker: ${userId}`);
+    
+    // Simuleer een rapport (in productie zou dit uit de database komen)
+    return {
+      id: reportId,
+      userId,
+      title: 'Marktonderzoeksrapport',
+      createdAt: new Date().toISOString(),
+      // Andere rapportgegevens...
+    };
+  } catch (error) {
+    console.error('❌ Error in getReport:', error);
+    return null;
+  }
+};
+
+/**
+ * Genereer visualisatiegegevens voor de marktanalyse
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Visualisatiegegevens
+ */
+MarketResearchService.prototype.generateVisualizationData = function(results) {
+  if (!results) {
+    return {
+      marketSegmentation: { labels: [], data: [] },
+      competitorPositioning: { xAxis: 'price', yAxis: 'quality', competitors: [] },
+      marketShareDistribution: { labels: [], data: [] }
+    };
+  }
+  
+  return {
+    marketSegmentation: this.generateMarketSegmentationChart(results),
+    competitorPositioning: this.generateCompetitorPositioningChart(results),
+    marketShareDistribution: this.generateMarketShareChart(results)
+  };
+};
+
+/**
+ * Genereer gegevens voor een marktsegmentatie grafiek
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Grafiekgegevens
+ */
+MarketResearchService.prototype.generateMarketSegmentationChart = function(results) {
+  const segmentation = results.segmentation;
+  
+  if (!segmentation || !segmentation.segments || !Array.isArray(segmentation.segments)) {
+    return { labels: [], data: [] };
+  }
+  
+  const labels = segmentation.segments.map(segment => segment.name);
+  const data = segmentation.segments.map(segment => segment.size || segment.percentage * 100);
+  
+  return {
+    labels,
+    data,
+    title: 'Marktsegmentatie',
+    type: 'pie'
+  };
+};
+
+/**
+ * Genereer gegevens voor een concurrentiepositionering grafiek
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Grafiekgegevens
+ */
+MarketResearchService.prototype.generateCompetitorPositioningChart = function(results) {
+  const competitorAnalysis = results.competitorAnalysis;
+  
+  if (!competitorAnalysis || !competitorAnalysis.positioning || !competitorAnalysis.positioning.matrix) {
+    return { xAxis: 'price', yAxis: 'quality', competitors: [] };
+  }
+  
+  const matrix = competitorAnalysis.positioning.matrix;
+  const dimensions = Object.keys(matrix);
+  
+  if (dimensions.length < 2) {
+    return { xAxis: 'price', yAxis: 'quality', competitors: [] };
+  }
+  
+  // Gebruik de eerste twee dimensies voor de grafiek
+  const xAxis = dimensions[0];
+  const yAxis = dimensions[1];
+  
+  const xData = matrix[xAxis];
+  const yData = matrix[yAxis];
+  
+  const competitors = [];
+  
+  // Combineer de x en y gegevens per concurrent
+  Object.keys(xData).forEach(competitorName => {
+    if (yData[competitorName] !== undefined) {
+      competitors.push({
+        name: competitorName,
+        x: xData[competitorName],
+        y: yData[competitorName],
+        isOwn: competitorName === 'Own' || competitorName === 'Self'
+      });
+    }
+  });
+  
+  return {
+    xAxis,
+    yAxis,
+    competitors,
+    title: 'Concurrentiepositionering',
+    type: 'scatter'
+  };
+};
+
+/**
+ * Genereer gegevens voor een marktaandeel grafiek
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Object} - Grafiekgegevens
+ */
+MarketResearchService.prototype.generateMarketShareChart = function(results) {
+  const competitorAnalysis = results.competitorAnalysis;
+  
+  if (!competitorAnalysis || !competitorAnalysis.marketShare || !competitorAnalysis.marketShare.marketShares) {
+    return { labels: [], data: [] };
+  }
+  
+  const marketShares = competitorAnalysis.marketShare.marketShares;
+  
+  const labels = Object.keys(marketShares);
+  const data = labels.map(label => marketShares[label] * 100); // Converteer naar percentages
+  
+  return {
+    labels,
+    data,
+    title: 'Marktaandeel Distributie',
+    type: 'bar'
+  };
+};
+
+/**
+ * Extraheer markttrends uit de analyseresultaten
+ * @param {Object} results - Marktanalyse resultaten
+ * @returns {Array} - Geëxtraheerde markttrends
+ */
+MarketResearchService.prototype.extractMarketTrends = function(results) {
+  if (!results || !results.trends || !results.trends.trends) {
+    return [];
+  }
+  
+  // Extraheer de belangrijkste trends
+  const trends = results.trends.trends
+    .sort((a, b) => {
+      // Sorteer op impact (high, medium, low)
+      const impactOrder = { high: 3, medium: 2, low: 1 };
+      return (impactOrder[b.impact] || 0) - (impactOrder[a.impact] || 0);
+    })
+    .map(trend => ({
+      name: trend.name,
+      direction: trend.direction,
+      impact: trend.impact,
+      timeframe: trend.timeframe || 'Nu - 2 jaar',
+      relevance: trend.description || 'Relevant voor marktstrategie'
+    }));
+  
+  // Voeg sociale media trends toe als die beschikbaar zijn
+  if (results.trends.socialMediaTrends && results.trends.socialMediaTrends.length > 0) {
+    const socialTrends = results.trends.socialMediaTrends
+      .slice(0, 3)
+      .map(trend => ({
+        name: `${trend.source} trend: ${trend.name}`,
+        direction: 'Stijgend',
+        impact: 'Medium',
+        timeframe: 'Nu - 1 jaar',
+        relevance: `Trending op ${trend.source}`
+      }));
+    
+    trends.push(...socialTrends);
+  }
+  
+  return trends;
+};
+
+/**
+ * Genereer inzichten op basis van scraping resultaten
+ * @param {Object} scrapingResults - Scraping resultaten
+ * @returns {Object} - Gegenereerde inzichten
+ */
+MarketResearchService.prototype.generateScrapingInsights = function(scrapingResults) {
+  if (!scrapingResults || !scrapingResults.data) {
+    return null;
+  }
+  
+  const insights = {
+    platforms: {},
+    keywords: scrapingResults.keywords || [],
+    summary: {
+      totalItems: 0,
+      topPlatforms: [],
+      keyFindings: []
+    }
+  };
+  
+  // Verwerk inzichten per platform
+  Object.keys(scrapingResults.data).forEach(platform => {
+    const platformData = scrapingResults.data[platform];
+    
+    if (!platformData || !platformData.items || !Array.isArray(platformData.items)) {
+      return;
+    }
+    
+    const items = platformData.items;
+    insights.summary.totalItems += items.length;
+    
+    // Genereer platform-specifieke inzichten
+    switch (platform) {
+      case 'amazon':
+        insights.platforms.amazon = this.generateAmazonInsights(items);
+        break;
+      case 'reddit':
+        insights.platforms.reddit = this.generateRedditInsights(items);
+        break;
+      case 'trustpilot':
+        insights.platforms.trustpilot = this.generateTrustpilotInsights(items);
+        break;
+      case 'tiktok':
+        insights.platforms.tiktok = this.generateTikTokInsights(items);
+        break;
+      case 'instagram':
+        insights.platforms.instagram = this.generateInstagramInsights(items);
+        break;
+      default:
+        insights.platforms[platform] = {
+          itemCount: items.length,
+          summary: `${items.length} items gevonden op ${platform}`
+        };
+    }
+    
+    // Voeg platform toe aan topPlatforms als er items zijn gevonden
+    if (items.length > 0) {
+      insights.summary.topPlatforms.push({
+        name: platform,
+        itemCount: items.length
+      });
+    }
+  });
+  
+  // Sorteer topPlatforms op itemCount
+  insights.summary.topPlatforms.sort((a, b) => b.itemCount - a.itemCount);
+  
+  // Genereer key findings op basis van platform inzichten
+  if (insights.platforms.amazon) {
+    insights.summary.keyFindings.push(
+      `Gemiddelde productprijs: €${insights.platforms.amazon.averagePrice.toFixed(2)}`,
+      `Hoogst beoordeelde product: ${insights.platforms.amazon.topRatedProduct.title} (${insights.platforms.amazon.topRatedProduct.rating})`
+    );
+  }
+  
+  if (insights.platforms.reddit) {
+    insights.summary.keyFindings.push(
+      `Meest upvoted post: ${insights.platforms.reddit.topPost.title} (${insights.platforms.reddit.topPost.upvotes} upvotes)`,
+      `Sentiment op Reddit: ${insights.platforms.reddit.sentiment}`
+    );
+  }
+  
+  if (insights.platforms.trustpilot) {
+    insights.summary.keyFindings.push(
+      `Gemiddelde bedrijfsbeoordeling: ${insights.platforms.trustpilot.averageRating}/5`,
+      `Meest voorkomende sentiment: ${insights.platforms.trustpilot.dominantSentiment}`
+    );
+  }
+  
+  return insights;
+};
+
+/**
+ * Genereer inzichten op basis van Amazon scraping resultaten
+ * @param {Array} items - Amazon scraping resultaten
+ * @returns {Object} - Gegenereerde inzichten
+ */
+MarketResearchService.prototype.generateAmazonInsights = function(items) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+  
+  // Bereken gemiddelde prijs
+  const prices = items.map(item => parseFloat(item.price) || 0).filter(price => price > 0);
+  const averagePrice = prices.length > 0 ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0;
+  
+  // Vind het hoogst beoordeelde product
+  const ratedProducts = items.filter(item => item.rating);
+  const topRatedProduct = ratedProducts.length > 0 ?
+    ratedProducts.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))[0] :
+    null;
+  
+  // Vind het populairste product (meeste reviews)
+  const reviewedProducts = items.filter(item => item.reviewCount);
+  const mostReviewedProduct = reviewedProducts.length > 0 ?
+    reviewedProducts.sort((a, b) => parseInt(b.reviewCount) - parseInt(a.reviewCount))[0] :
+    null;
+  
+  return {
+    itemCount: items.length,
+    averagePrice,
+    priceRange: {
+      min: Math.min(...prices),
+      max: Math.max(...prices)
+    },
+    topRatedProduct: topRatedProduct ? {
+      title: topRatedProduct.title,
+      price: topRatedProduct.price,
+      rating: topRatedProduct.rating,
+      url: topRatedProduct.url
+    } : null,
+    mostReviewedProduct: mostReviewedProduct ? {
+      title: mostReviewedProduct.title,
+      reviewCount: mostReviewedProduct.reviewCount,
+      rating: mostReviewedProduct.rating,
+      url: mostReviewedProduct.url
+    } : null,
+    categories: this.extractCommonCategories(items),
+    features: this.extractCommonFeatures(items)
+  };
+};
+
+/**
+ * Genereer inzichten op basis van Reddit scraping resultaten
+ * @param {Array} items - Reddit scraping resultaten
+ * @returns {Object} - Gegenereerde inzichten
+ */
+MarketResearchService.prototype.generateRedditInsights = function(items) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+  
+  // Vind de meest upvoted post
+  const topPost = items.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0))[0];
+  
+  // Analyseer sentiment
+  const sentiments = items
+    .filter(item => item.sentiment)
+    .map(item => item.sentiment);
+  
+  const sentimentCounts = {
+    positive: sentiments.filter(s => s === 'positive').length,
+    neutral: sentiments.filter(s => s === 'neutral').length,
+    negative: sentiments.filter(s => s === 'negative').length
+  };
+  
+  const dominantSentiment = Object.keys(sentimentCounts)
+    .sort((a, b) => sentimentCounts[b] - sentimentCounts[a])[0];
+  
+  // Extraheer subreddits
+  const subreddits = [...new Set(items
+    .filter(item => item.subreddit)
+    .map(item => item.subreddit))];
+  
+  return {
+    itemCount: items.length,
+    topPost: topPost ? {
+      title: topPost.title,
+      upvotes: topPost.upvotes,
+      commentCount: topPost.commentCount,
+      url: topPost.url
+    } : null,
+    sentiment: dominantSentiment,
+    sentimentBreakdown: {
+      positive: sentimentCounts.positive / sentiments.length,
+      neutral: sentimentCounts.neutral / sentiments.length,
+      negative: sentimentCounts.negative / sentiments.length
+    },
+    subreddits,
+    mostDiscussedTopics: this.extractTopicsFromRedditPosts(items)
+  };
+};
+
+/**
+ * Extraheer veelvoorkomende categorieën uit Amazon producten
+ * @param {Array} items - Amazon producten
+ * @returns {Array} - Veelvoorkomende categorieën
+ */
+MarketResearchService.prototype.extractCommonCategories = function(items) {
+  // Verzamel alle categorieën
+  const allCategories = items
+    .filter(item => item.categories && Array.isArray(item.categories))
+    .flatMap(item => item.categories);
+  
+  // Tel frequentie van elke categorie
+  const categoryCounts = {};
+  allCategories.forEach(category => {
+    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+  });
+  
+  // Sorteer op frequentie en neem de top 5
+  return Object.keys(categoryCounts)
+    .sort((a, b) => categoryCounts[b] - categoryCounts[a])
+    .slice(0, 5);
+};
+
+/**
+ * Extraheer veelvoorkomende features uit Amazon producten
+ * @param {Array} items - Amazon producten
+ * @returns {Array} - Veelvoorkomende features
+ */
+MarketResearchService.prototype.extractCommonFeatures = function(items) {
+  // Verzamel alle features
+  const allFeatures = items
+    .filter(item => item.features && Array.isArray(item.features))
+    .flatMap(item => item.features);
+  
+  // Tel frequentie van elke feature
+  const featureCounts = {};
+  allFeatures.forEach(feature => {
+    featureCounts[feature] = (featureCounts[feature] || 0) + 1;
+  });
+  
+  // Sorteer op frequentie en neem de top 5
+  return Object.keys(featureCounts)
+    .sort((a, b) => featureCounts[b] - featureCounts[a])
+    .slice(0, 5);
+};
+
+/**
+ * Extraheer veelbesproken onderwerpen uit Reddit posts
+ * @param {Array} posts - Reddit posts
+ * @returns {Array} - Veelbesproken onderwerpen
+ */
+MarketResearchService.prototype.extractTopicsFromRedditPosts = function(posts) {
+  // Eenvoudige implementatie: gebruik de titels als onderwerpen
+  const titles = posts.map(post => post.title);
+  
+  // Hier zou je een meer geavanceerde NLP-analyse kunnen toepassen
+  // Voor nu nemen we gewoon de eerste 5 titels
+  return titles.slice(0, 5);
+};
+
+/**
+ * Verrijk marktanalyse resultaten met scraping data
+ * @param {Object} results - Marktanalyse resultaten
+ * @param {Object} scrapingData - Scraping resultaten
+ */
+MarketResearchService.prototype.enrichAnalysisWithScrapingData = function(results, scrapingData) {
+  if (!results || !scrapingData || !scrapingData.data) return;
+  
+  try {
+    // Verrijk trends met scraping inzichten
+    if (results.trends && results.trends.trends) {
+      // Verzamel alle trending topics van sociale media platforms
+      const trendingTopics = [];
+      
+      // Verwerk Reddit data
+      if (scrapingData.data.reddit && scrapingData.data.reddit.items) {
+        const redditPosts = scrapingData.data.reddit.items;
+        
+        // Identificeer populaire subreddits en posts
+        const popularPosts = redditPosts
+          .filter(post => post.upvotes > 1000 || post.commentCount > 100)
+          .map(post => ({
+            name: post.title,
+            source: 'Reddit',
+            popularity: post.upvotes,
+            engagement: post.commentCount,
+            sentiment: post.sentiment || 'neutral',
+            url: post.url
+          }));
+        
+        trendingTopics.push(...popularPosts);
+      }
+      
+      // Verwerk TikTok data
+      if (scrapingData.data.tiktok && scrapingData.data.tiktok.items) {
+        const tiktokVideos = scrapingData.data.tiktok.items;
+        
+        // Identificeer trending videos
+        const trendingVideos = tiktokVideos
+          .filter(video => video.views > 100000 || video.likes > 10000)
+          .map(video => ({
+            name: video.title || video.description,
+            source: 'TikTok',
+            popularity: video.views,
+            engagement: video.likes + video.comments + video.shares,
+            hashtags: video.hashtags,
+            url: video.url
+          }));
+        
+        trendingTopics.push(...trendingVideos);
+      }
+      
+      // Verwerk Instagram data
+      if (scrapingData.data.instagram && scrapingData.data.instagram.items) {
+        const instagramPosts = scrapingData.data.instagram.items;
+        
+        // Identificeer populaire posts
+        const popularPosts = instagramPosts
+          .filter(post => post.likes > 5000 || post.comments > 500)
+          .map(post => ({
+            name: post.caption,
+            source: 'Instagram',
+            popularity: post.likes,
+            engagement: post.comments,
+            hashtags: post.hashtags,
+            url: post.url
+          }));
+        
+        trendingTopics.push(...popularPosts);
+      }
+      
+      // Voeg trending topics toe aan trends
+      if (trendingTopics.length > 0) {
+        results.trends.socialMediaTrends = trendingTopics;
+        
+        // Voeg de top trending topics toe aan de algemene trends
+        const topTrendingTopics = trendingTopics
+          .sort((a, b) => (b.popularity + b.engagement) - (a.popularity + a.engagement))
+          .slice(0, 3);
+        
+        for (const topic of topTrendingTopics) {
+          results.trends.trends.push({
+            name: `${topic.source} trend: ${topic.name}`,
+            direction: 'up',
+            impact: 'medium',
+            description: `Trending op ${topic.source} met ${topic.popularity} views/likes en ${topic.engagement} reacties/comments`,
+            source: topic.source,
+            url: topic.url
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Fout bij verrijken van marktanalyse met scraping data:', error);
+  }
+};
+
+  /**
+   * Extraheer markttrends uit de analyse resultaten
+   * @param {Object} results - Analyse resultaten
+   * @returns {Array} - Geïdentificeerde trends
+   */
+  extractMarketTrends(results) {
+  if (!results || !results.trends || !results.trends.trends) {
+    return [];
+  }
+  
+  // Extraheer de belangrijkste trends
+  const trends = results.trends.trends
+    .sort((a, b) => {
+      // Sorteer op impact (high, medium, low)
+      const impactOrder = { high: 3, medium: 2, low: 1 };
+      return (impactOrder[b.impact] || 0) - (impactOrder[a.impact] || 0);
+    })
+    .map(trend => ({
+      name: trend.name,
+      direction: trend.direction,
+      impact: trend.impact,
+      timeframe: trend.timeframe || 'Nu - 2 jaar',
+      relevance: trend.description || 'Relevant voor marktstrategie'
+    }));
+  
+  // Voeg sociale media trends toe als die beschikbaar zijn
+  if (results.trends.socialMediaTrends && results.trends.socialMediaTrends.length > 0) {
+    const socialTrends = results.trends.socialMediaTrends
+      .slice(0, 3)
+    // Extraheer de belangrijkste trends
+    const trends = results.trends.trends
+      .sort((a, b) => {
+        // Sorteer op impact (high, medium, low)
+        const impactOrder = { high: 3, medium: 2, low: 1 };
+        return (impactOrder[b.impact] || 0) - (impactOrder[a.impact] || 0);
+      })
+      .map(trend => ({
+        name: trend.name,
+        direction: trend.direction,
+        impact: trend.impact,
+        timeframe: trend.timeframe || 'Nu - 2 jaar',
+        relevance: trend.description || 'Relevant voor marktstrategie'
+      }));
+    
+    // Voeg sociale media trends toe als die beschikbaar zijn
+    if (results.trends.socialMediaTrends && results.trends.socialMediaTrends.length > 0) {
+      const socialTrends = results.trends.socialMediaTrends
+        .slice(0, 3)
+        .map(trend => ({
+          name: `${trend.source} trend: ${trend.name}`,
+          direction: 'Stijgend',
+          impact: 'Medium',
+          timeframe: 'Nu - 1 jaar',
+          relevance: `Trending op ${trend.source}`
+        }));
+      
+      trends.push(...socialTrends);
+    }
+    
+    return trends;
+  }
+
+  /**
+   * Genereer inzichten op basis van scraping resultaten
+   * @param {Object} scrapingResults - Scraping resultaten
+   * @returns {Object} - Gegenereerde inzichten
+   */
+  generateScrapingInsights(scrapingResults) {
+    if (!scrapingResults || !scrapingResults.data) {
+      return null;
+    }
+    
+    const insights = {
+      platforms: {},
+      keywords: scrapingResults.keywords || [],
+      summary: {
+        totalItems: 0,
+        topPlatforms: [],
+        keyFindings: []
+      }
+    };
+    
+    // Verwerk inzichten per platform
+    Object.keys(scrapingResults.data).forEach(platform => {
+      const platformData = scrapingResults.data[platform];
+      
+      if (!platformData || !platformData.items || !Array.isArray(platformData.items)) {
+        return;
+      }
+      
+      const items = platformData.items;
+      insights.summary.totalItems += items.length;
+      
+      // Genereer platform-specifieke inzichten
+      switch (platform) {
+        case 'amazon':
+          insights.platforms.amazon = this.generateAmazonInsights(items);
+          break;
+        case 'reddit':
+          insights.platforms.reddit = this.generateRedditInsights(items);
+          break;
+        case 'trustpilot':
+          insights.platforms.trustpilot = this.generateTrustpilotInsights(items);
+          break;
+        case 'tiktok':
+          insights.platforms.tiktok = this.generateTikTokInsights(items);
+          break;
+        case 'instagram':
+          insights.platforms.instagram = this.generateInstagramInsights(items);
+          break;
+        default:
+          insights.platforms[platform] = {
+            itemCount: items.length,
+            summary: `${items.length} items gevonden op ${platform}`
+          };
+      }
+      
+      // Voeg platform toe aan topPlatforms als er items zijn gevonden
+      if (items.length > 0) {
+        insights.summary.topPlatforms.push({
+          name: platform,
+          itemCount: items.length
+        });
+      }
+    });
+    
+    // Sorteer topPlatforms op itemCount
+    insights.summary.topPlatforms.sort((a, b) => b.itemCount - a.itemCount);
+    
+    // Genereer key findings op basis van platform inzichten
+    if (insights.platforms.amazon) {
+      insights.summary.keyFindings.push(
+        `Gemiddelde productprijs: €${insights.platforms.amazon.averagePrice.toFixed(2)}`,
+        `Hoogst beoordeelde product: ${insights.platforms.amazon.topRatedProduct.title} (${insights.platforms.amazon.topRatedProduct.rating})`
+      );
+    }
+    
+    if (insights.platforms.reddit) {
+      insights.summary.keyFindings.push(
+        `Meest upvoted post: ${insights.platforms.reddit.topPost.title} (${insights.platforms.reddit.topPost.upvotes} upvotes)`,
+        `Sentiment op Reddit: ${insights.platforms.reddit.sentiment}`
+      );
+    }
+    
+    if (insights.platforms.trustpilot) {
+      insights.summary.keyFindings.push(
+        `Gemiddelde bedrijfsbeoordeling: ${insights.platforms.trustpilot.averageRating}/5`,
+        `Meest voorkomende sentiment: ${insights.platforms.trustpilot.dominantSentiment}`
+      );
+    }
+    
+    return insights;
+  }
+
+  /**
+   * Genereer inzichten op basis van Amazon scraping resultaten
+   * @param {Array} items - Amazon scraping resultaten
+   * @returns {Object} - Gegenereerde inzichten
+   */
+  generateAmazonInsights(items) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return null;
+    }
+    
+    // Bereken gemiddelde prijs
+    const prices = items.map(item => parseFloat(item.price) || 0).filter(price => price > 0);
+    const averagePrice = prices.length > 0 ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0;
+    
+    // Vind het hoogst beoordeelde product
+    const ratedProducts = items.filter(item => item.rating);
+    const topRatedProduct = ratedProducts.length > 0 ?
+      ratedProducts.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))[0] :
+      null;
+    
+    // Vind het populairste product (meeste reviews)
+    const reviewedProducts = items.filter(item => item.reviewCount);
+    const mostReviewedProduct = reviewedProducts.length > 0 ?
+      reviewedProducts.sort((a, b) => parseInt(b.reviewCount) - parseInt(a.reviewCount))[0] :
+      null;
+    
+    return {
+      itemCount: items.length,
+      averagePrice,
+      priceRange: {
+        min: Math.min(...prices),
+        max: Math.max(...prices)
+      },
+      topRatedProduct: topRatedProduct ? {
+        title: topRatedProduct.title,
+        price: topRatedProduct.price,
+        rating: topRatedProduct.rating,
+        url: topRatedProduct.url
+      } : null,
+      mostReviewedProduct: mostReviewedProduct ? {
+        title: mostReviewedProduct.title,
+        reviewCount: mostReviewedProduct.reviewCount,
+        rating: mostReviewedProduct.rating,
+        url: mostReviewedProduct.url
+      } : null,
+      categories: this.extractCommonCategories(items),
+      features: this.extractCommonFeatures(items)
+    };
+  }
+
+  /**
+   * Genereer inzichten op basis van Reddit scraping resultaten
+   * @param {Array} items - Reddit scraping resultaten
+   * @returns {Object} - Gegenereerde inzichten
+   */
+  generateRedditInsights(items) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return null;
+    }
+    
+    // Vind de meest upvoted post
+    const topPost = items.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0))[0];
+    
+    // Analyseer sentiment
+    const sentiments = items
+      .filter(item => item.sentiment)
+      .map(item => item.sentiment);
+    
+    const sentimentCounts = {
+      positive: sentiments.filter(s => s === 'positive').length,
+      neutral: sentiments.filter(s => s === 'neutral').length,
+      negative: sentiments.filter(s => s === 'negative').length
+    };
+    
+    const dominantSentiment = Object.keys(sentimentCounts)
+      .sort((a, b) => sentimentCounts[b] - sentimentCounts[a])[0];
+    
+    // Extraheer subreddits
+    const subreddits = [...new Set(items
+      .filter(item => item.subreddit)
+      .map(item => item.subreddit))];
+    
+    return {
+      itemCount: items.length,
+      topPost: topPost ? {
+        title: topPost.title,
+        upvotes: topPost.upvotes,
+        commentCount: topPost.commentCount,
+        url: topPost.url
+      } : null,
+      sentiment: dominantSentiment,
+      sentimentBreakdown: {
+        positive: sentimentCounts.positive / sentiments.length,
+        neutral: sentimentCounts.neutral / sentiments.length,
+        negative: sentimentCounts.negative / sentiments.length
+      },
+      subreddits,
+      mostDiscussedTopics: this.extractTopicsFromRedditPosts(items)
+    };
+  }
+
+  /**
+   * Extraheer veelvoorkomende categorieën uit Amazon producten
+   * @param {Array} items - Amazon producten
+   * @returns {Array} - Veelvoorkomende categorieën
+   */
+  extractCommonCategories(items) {
+    // Verzamel alle categorieën
+    const allCategories = items
+      .filter(item => item.categories && Array.isArray(item.categories))
+      .flatMap(item => item.categories);
+    
+    // Tel frequentie van elke categorie
+    const categoryCounts = {};
+    allCategories.forEach(category => {
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+    
+    // Sorteer op frequentie en neem de top 5
+    return Object.keys(categoryCounts)
+      .sort((a, b) => categoryCounts[b] - categoryCounts[a])
+      .slice(0, 5);
+  }
+
+  /**
+   * Extraheer veelvoorkomende features uit Amazon producten
+   * @param {Array} items - Amazon producten
+   * @returns {Array} - Veelvoorkomende features
+   */
+  extractCommonFeatures(items) {
+    // Verzamel alle features
+    const allFeatures = items
+      .filter(item => item.features && Array.isArray(item.features))
+      .flatMap(item => item.features);
+    
+    // Tel frequentie van elke feature
+    const featureCounts = {};
+    allFeatures.forEach(feature => {
+      featureCounts[feature] = (featureCounts[feature] || 0) + 1;
+    });
+    
+    // Sorteer op frequentie en neem de top 5
+    return Object.keys(featureCounts)
+      .sort((a, b) => featureCounts[b] - featureCounts[a])
+      .slice(0, 5);
+  }
+
+  /**
+   * Extraheer veelbesproken onderwerpen uit Reddit posts
+   * @param {Array} posts - Reddit posts
+   * @returns {Array} - Veelbesproken onderwerpen
+   */
+  extractTopicsFromRedditPosts(posts) {
+    // Eenvoudige implementatie: gebruik de titels als onderwerpen
+    const titles = posts.map(post => post.title);
+    
+    // Hier zou je een meer geavanceerde NLP-analyse kunnen toepassen
+    // Voor nu nemen we gewoon de eerste 5 titels
+    return titles.slice(0, 5);
+  }
+
+  /**
+   * Verrijk marktanalyse resultaten met scraping data
+   * @param {Object} results - Marktanalyse resultaten
+   * @param {Object} scrapingData - Scraping resultaten
+   */
+  enrichAnalysisWithScrapingData(results, scrapingData) {
+    if (!results || !scrapingData || !scrapingData.data) return;
+    
+    try {
+      // Verrijk trends met scraping inzichten
+      if (results.trends && results.trends.trends) {
+        // Verzamel alle trending topics van sociale media platforms
+        const trendingTopics = [];
+        
+        // Verwerk Reddit data
+        if (scrapingData.data.reddit && scrapingData.data.reddit.items) {
+          const redditPosts = scrapingData.data.reddit.items;
+          
+          // Identificeer populaire subreddits en posts
+          const popularPosts = redditPosts
+            .filter(post => post.upvotes > 1000 || post.commentCount > 100)
+            .map(post => ({
+              name: post.title,
+              source: 'Reddit',
+              popularity: post.upvotes,
+              engagement: post.commentCount,
+              sentiment: post.sentiment || 'neutral',
+              url: post.url
+            }));
+          
+          trendingTopics.push(...popularPosts);
+        }
+        
+        // Verwerk TikTok data
+        if (scrapingData.data.tiktok && scrapingData.data.tiktok.items) {
+          const tiktokVideos = scrapingData.data.tiktok.items;
+          
+          // Identificeer trending videos
+          const trendingVideos = tiktokVideos
+            .filter(video => video.views > 100000 || video.likes > 10000)
+            .map(video => ({
+              name: video.title || video.description,
+              source: 'TikTok',
+              popularity: video.views,
+              engagement: video.likes + video.comments + video.shares,
+              hashtags: video.hashtags,
+              url: video.url
+            }));
+          
+          trendingTopics.push(...trendingVideos);
+        }
+        
+        // Verwerk Instagram data
+        if (scrapingData.data.instagram && scrapingData.data.instagram.items) {
+          const instagramPosts = scrapingData.data.instagram.items;
+          
+          // Identificeer populaire posts
+          const popularPosts = instagramPosts
+            .filter(post => post.likes > 5000 || post.comments > 500)
+            .map(post => ({
+              name: post.caption,
+              source: 'Instagram',
+              popularity: post.likes,
+              engagement: post.comments,
+              hashtags: post.hashtags,
+              url: post.url
+            }));
+          
+          trendingTopics.push(...popularPosts);
+        }
+        
+        // Voeg trending topics toe aan trends
+        if (trendingTopics.length > 0) {
+          results.trends.socialMediaTrends = trendingTopics;
+          
+          // Voeg de top trending topics toe aan de algemene trends
+          const topTrendingTopics = trendingTopics
+            .sort((a, b) => (b.popularity + b.engagement) - (a.popularity + a.engagement))
+            .slice(0, 3);
+          
+          for (const topic of topTrendingTopics) {
+            results.trends.trends.push({
+              name: `${topic.source} trend: ${topic.name}`,
+              direction: 'up',
+              impact: 'medium',
+              description: `Trending op ${topic.source} met ${topic.popularity} views/likes en ${topic.engagement} reacties/comments`,
+              source: topic.source,
+              url: topic.url
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Fout bij verrijken van marktanalyse met scraping data:', error);
+    }
+  }
+}
+
+// Singleton instance
+let instance = null;
+
+/**
+ * Krijg een singleton instance van de MarketResearchService
+ * @returns {MarketResearchService} - MarketResearchService instance
+ */
+const getMarketResearchService = () => {
+  if (!instance) {
+    instance = new MarketResearchService();
+  }
+  return instance;
+};
+
+module.exports = getMarketResearchService;
+module.exports.MarketResearchService = MarketResearchService;

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimale MarketPulse AI Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MarketPulse AI API Test</h1>
+        <p>Klik op de knop om de API te testen:</p>
+        <button onclick="testApi()">Test API</button>
+        <div id="result">
+            <h2>Resultaat:</h2>
+            <pre id="output">Nog geen resultaat</pre>
+        </div>
+    </div>
+
+    <script>
+        function testApi() {
+            document.getElementById('output').textContent = 'Bezig met laden...';
+            
+            fetch('http://localhost:3000/')
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(function(error) {
+                    document.getElementById('output').textContent = 'Fout: ' + error.message;
+                });
+        }
+    </script>
+</body>
+</html>

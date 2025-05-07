@@ -1,0 +1,106 @@
+/* Premium Breadcrumbs Component Styles */
+
+.premium-breadcrumbs {
+  font-family: 'Inter', sans-serif;
+  padding: 0.75rem 0;
+}
+
+.premium-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.premium-breadcrumbs__item {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.premium-breadcrumbs__item--active {
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.premium-breadcrumbs__separator {
+  margin: 0 0.5rem;
+  color: #D1D5DB;
+  user-select: none;
+}
+
+.premium-breadcrumbs__link {
+  display: flex;
+  align-items: center;
+  color: #6B7280;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.premium-breadcrumbs__link:hover {
+  color: #00ADAD;
+  text-decoration: underline;
+}
+
+.premium-breadcrumbs__current {
+  display: flex;
+  align-items: center;
+}
+
+.premium-breadcrumbs__icon,
+.premium-breadcrumbs__home-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 0.375rem;
+}
+
+.premium-breadcrumbs__ellipsis {
+  padding: 0 0.25rem;
+  color: #9CA3AF;
+  cursor: default;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .premium-breadcrumbs {
+    padding: 0.5rem 0;
+  }
+  
+  .premium-breadcrumbs__item {
+    font-size: 0.813rem;
+  }
+  
+  .premium-breadcrumbs__separator {
+    margin: 0 0.375rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .premium-breadcrumbs__item {
+    color: #9CA3AF;
+  }
+  
+  .premium-breadcrumbs__item--active {
+    color: #F3F4F6;
+  }
+  
+  .premium-breadcrumbs__separator {
+    color: #4B5563;
+  }
+  
+  .premium-breadcrumbs__link {
+    color: #9CA3AF;
+  }
+  
+  .premium-breadcrumbs__link:hover {
+    color: #00ADAD;
+  }
+  
+  .premium-breadcrumbs__ellipsis {
+    color: #6B7280;
+  }
+}

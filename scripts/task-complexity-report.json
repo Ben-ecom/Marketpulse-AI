@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "generatedAt": "2025-05-02T14:14:00.238Z",
+    "tasksAnalyzed": 15,
+    "thresholdScore": 5,
+    "projectName": "Your Project Name",
+    "usedResearch": true
+  },
+  "complexityAnalysis": [
+    {
+      "taskId": 1,
+      "taskTitle": "Setup Core Infrastructure with Supabase",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the Supabase infrastructure setup into specific implementation steps including database schema design, authentication configuration, storage setup, security policies, and API configuration.",
+      "reasoning": "This task involves multiple components (database, auth, storage, security) with interdependencies. The complexity comes from ensuring proper configuration of RLS policies and service roles, which requires careful planning and testing."
+    },
+    {
+      "taskId": 2,
+      "taskTitle": "Implement Decodo Scraping API Wrapper",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the implementation steps for creating a robust Decodo API wrapper, including request handling, error management, rate limiting, logging system, and job queue architecture.",
+      "reasoning": "Creating an API wrapper with error handling, retries, rate limiting, and a queue system involves moderate complexity. The task requires careful design of the service architecture and robust error handling mechanisms."
+    },
+    {
+      "taskId": 3,
+      "taskTitle": "Develop Reddit Scraping Module",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the Reddit scraping module implementation into steps covering URL generation, data extraction logic, pagination handling, data transformation, and storage integration.",
+      "reasoning": "Reddit's structure with nested comments and pagination makes this moderately complex. The module needs to handle various data types, pagination, and potential rate limiting issues specific to Reddit's structure."
+    },
+    {
+      "taskId": 4,
+      "taskTitle": "Develop Amazon Reviews Scraping Module",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the implementation steps for the Amazon reviews scraper, including product page navigation, review extraction, pagination handling, geolocation simulation, and data storage integration.",
+      "reasoning": "Amazon's review system has a consistent structure but requires handling pagination and potentially different marketplace layouts. Geolocation simulation adds some complexity to the implementation."
+    },
+    {
+      "taskId": 5,
+      "taskTitle": "Develop Instagram/TikTok Scraping Module",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the social media scraping module into steps covering authentication handling, content extraction for different media types, hashtag search implementation, engagement metrics collection, pagination, and data storage.",
+      "reasoning": "Social media platforms have complex structures and often implement anti-scraping measures. Handling both Instagram and TikTok in one module increases complexity, as does the need for login simulation and media type detection."
+    },
+    {
+      "taskId": 6,
+      "taskTitle": "Develop Trustpilot Scraping Module",
+      "complexityScore": 5,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Detail the implementation steps for the Trustpilot scraper, including business page navigation, review extraction logic, filtering mechanisms, and data storage integration.",
+      "reasoning": "Trustpilot has a relatively straightforward structure compared to social media platforms. The main complexity comes from handling pagination and filtering options."
+    },
+    {
+      "taskId": 7,
+      "taskTitle": "Implement NLP Processing Pipeline",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the NLP pipeline implementation into steps covering text preprocessing, language detection/translation, tokenization/lemmatization, entity recognition, batch processing architecture, and storage system design.",
+      "reasoning": "NLP pipelines involve multiple complex processing steps and require handling large datasets efficiently. The multilingual requirement and batch processing add significant complexity."
+    },
+    {
+      "taskId": 8,
+      "taskTitle": "Implement Sentiment Analysis Engine",
+      "complexityScore": 9,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the implementation steps for the sentiment analysis engine, including model selection/training, multi-level classification system, emotional intensity scoring, aspect-based analysis, contextual detection, and integration with existing data.",
+      "reasoning": "Sentiment analysis with multiple levels of classification and contextual understanding is highly complex. Implementing machine learning models and ensuring accuracy across different domains adds significant complexity."
+    },
+    {
+      "taskId": 9,
+      "taskTitle": "Develop Pain Points and Desires Extraction",
+      "complexityScore": 9,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the pain points and desires extraction system into steps covering pattern recognition algorithms, clustering mechanisms, ranking system development, visualization data preparation, storage design, and integration with NLP pipeline.",
+      "reasoning": "Extracting nuanced concepts like pain points and desires requires sophisticated algorithms and pattern recognition. The clustering and ranking components add additional complexity."
+    },
+    {
+      "taskId": 10,
+      "taskTitle": "Implement Language Analysis Module",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the implementation steps for the language analysis module, including terminology extraction algorithms, phrase mining techniques, jargon identification methods, frequency analysis, and visualization data preparation.",
+      "reasoning": "Domain-specific language analysis requires specialized algorithms for terminology extraction and phrase mining. The complexity is moderate to high due to the need for accurate identification of domain-specific language patterns."
+    },
+    {
+      "taskId": 11,
+      "taskTitle": "Develop Market Research and Analysis Module",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the market research module implementation into steps covering market size estimation, segmentation algorithms, trend identification methods, competitor analysis techniques, SWOT generation, and gap-opportunity identification.",
+      "reasoning": "Market research involves complex analytical algorithms and depends on data from multiple sources. The automated SWOT analysis and trend forecasting components add significant complexity."
+    },
+    {
+      "taskId": 12,
+      "taskTitle": "Implement AI-driven Recommendations Engine",
+      "complexityScore": 9,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Detail the implementation steps for the recommendations engine, including algorithm design for different recommendation types, ranking system development, personalization mechanisms, template generation, and integration with analyzed data.",
+      "reasoning": "Generating actionable, personalized recommendations based on complex analyzed data is highly sophisticated. The system needs to understand context and generate relevant, impactful suggestions across multiple domains."
+    },
+    {
+      "taskId": 13,
+      "taskTitle": "Develop React Frontend with Dashboard Visualizations",
+      "complexityScore": 8,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down the React frontend development into steps covering component architecture, state management implementation, visualization components development, responsive design implementation, accessibility compliance, and integration with backend APIs.",
+      "reasoning": "Creating a comprehensive dashboard with multiple visualization types is complex. The combination of state management, data visualization libraries, responsive design, and accessibility requirements increases the implementation complexity."
+    },
+    {
+      "taskId": 14,
+      "taskTitle": "Implement API Layer and Backend Integration",
+      "complexityScore": 7,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Detail the implementation steps for the API layer, including RESTful endpoints design, GraphQL schema development, authentication middleware, rate limiting implementation, error handling system, and integration with backend services.",
+      "reasoning": "Implementing both REST and GraphQL APIs with authentication, rate limiting, and comprehensive error handling is moderately complex. The integration with multiple backend services adds coordination complexity."
+    },
+    {
+      "taskId": 15,
+      "taskTitle": "Setup Render Deployment and CI/CD Pipeline",
+      "complexityScore": 6,
+      "recommendedSubtasks": 5,
+      "expansionPrompt": "Break down the deployment and CI/CD setup into steps covering Render service configuration, GitHub integration, environment management, monitoring setup, scaling configuration, and backup procedures.",
+      "reasoning": "Setting up deployment infrastructure with CI/CD involves moderate complexity. The configuration of multiple services, environment variables, and automatic scaling requires careful planning and testing."
+    }
+  ]
+}

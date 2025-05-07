@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marketpulse-config
+data:
+  NODE_ENV: "staging"
+  FRONTEND_API_URL: "https://staging-api.marketpulse.ai/api/v1"

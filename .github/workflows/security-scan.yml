@@ -1,0 +1,148 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Frontend Dependency Check
+        run: |
+          cd frontend
+          npm audit --json > frontend-audit.json || true
+      
+      - name: Backend Dependency Check
+        run: |
+          cd backend
+          npm audit --json > backend-audit.json || true
+      
+      - name: Upload Audit Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: npm-audit-results
+          path: |
+            frontend/frontend-audit.json
+            backend/backend-audit.json
+
+  code-scan:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+      
+      - name: Run ESLint Security Rules
+        run: |
+          cd frontend
+          npm ci
+          npx eslint --config .eslintrc.js --plugin security --rule 'security/detect-unsafe-regex: error' --rule 'security/detect-non-literal-regexp: error' --rule 'security/detect-eval-with-expression: error' --rule 'security/detect-no-csrf-before-method-override: error' --rule 'security/detect-buffer-noassert: error' --rule 'security/detect-child-process: error' --rule 'security/detect-disable-mustache-escape: error' --rule 'security/detect-object-injection: error' --rule 'security/detect-possible-timing-attacks: error' --rule 'security/detect-pseudoRandomBytes: error' src/ -f json > frontend-security-lint.json || true
+          cd ../backend
+          npm ci
+          npx eslint --config .eslintrc.js --plugin security --rule 'security/detect-unsafe-regex: error' --rule 'security/detect-non-literal-regexp: error' --rule 'security/detect-eval-with-expression: error' --rule 'security/detect-no-csrf-before-method-override: error' --rule 'security/detect-buffer-noassert: error' --rule 'security/detect-child-process: error' --rule 'security/detect-disable-mustache-escape: error' --rule 'security/detect-object-injection: error' --rule 'security/detect-possible-timing-attacks: error' --rule 'security/detect-pseudoRandomBytes: error' src/ -f json > backend-security-lint.json || true
+      
+      - name: Upload Security Scan Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-results
+          path: |
+            frontend/frontend-security-lint.json
+            backend/backend-security-lint.json
+
+  docker-scan:
+    name: Docker Image Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t marketpulseai/frontend:scan -f docker/production/frontend.Dockerfile frontend/
+      
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t marketpulseai/backend:scan -f docker/production/backend.Dockerfile backend/
+      
+      - name: Scan Frontend Docker Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'marketpulseai/frontend:scan'
+          format: 'sarif'
+          output: 'frontend-trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Scan Backend Docker Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'marketpulseai/backend:scan'
+          format: 'sarif'
+          output: 'backend-trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Docker Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: |
+            frontend-trivy-results.sarif
+            backend-trivy-results.sarif
+
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency-check, code-scan, docker-scan]
+    
+    steps:
+      - name: Download All Scan Results
+        uses: actions/download-artifact@v3
+      
+      - name: Combine Reports
+        run: |
+          mkdir -p security-report
+          cp -r npm-audit-results/* security-report/
+          cp -r security-scan-results/* security-report/
+          echo "# Security Scan Report - $(date)" > security-report/summary.md
+          echo "## Dependency Vulnerabilities" >> security-report/summary.md
+          echo "See frontend-audit.json and backend-audit.json for details." >> security-report/summary.md
+          echo "## Code Security Issues" >> security-report/summary.md
+          echo "See frontend-security-lint.json and backend-security-lint.json for details." >> security-report/summary.md
+          echo "## Docker Image Vulnerabilities" >> security-report/summary.md
+          echo "See SARIF files for details." >> security-report/summary.md
+      
+      - name: Upload Combined Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: security-report/
+      
+      - name: Send Notification
+        if: ${{ always() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: security-alerts
+          SLACK_TITLE: Security Scan Report
+          SLACK_MESSAGE: 'Security scan completed. Check the artifacts for details.'
+          SLACK_COLOR: ${{ job.status }}

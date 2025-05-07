@@ -1,0 +1,13 @@
+{
+  "name": "marketpulse-ai-scripts",
+  "version": "1.0.0",
+  "description": "Scripts voor MarketPulse AI",
+  "main": "test-edge-functions.js",
+  "scripts": {
+    "test-edge-functions": "node test-edge-functions.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.7.1",
+    "dotenv": "^16.0.3"
+  }
+}

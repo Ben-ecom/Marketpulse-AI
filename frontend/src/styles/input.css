@@ -1,0 +1,171 @@
+/* Premium Input Component Styles */
+
+.premium-input {
+  position: relative;
+  margin-bottom: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+}
+
+.premium-input__container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.premium-input__field {
+  height: 56px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #1F2937;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.premium-input__label {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #6B7280;
+  pointer-events: none;
+  transition: all 0.2s ease-in-out;
+  transform-origin: left top;
+}
+
+.premium-input__required {
+  color: #EF4444;
+  margin-left: 0.25rem;
+}
+
+.premium-input__underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  transform-origin: left;
+}
+
+.premium-input__helper {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.premium-input__helper-text {
+  color: #6B7280;
+}
+
+.premium-input__helper-text--error {
+  color: #EF4444;
+}
+
+/* Variant: Default */
+.premium-input--default {
+  border-bottom: 1px solid #D1D5DB;
+}
+
+.premium-input__field--default:focus {
+  border-color: #00ADAD;
+}
+
+/* Variant: Outlined */
+.premium-input--outlined {
+  border-radius: 0.375rem;
+}
+
+.premium-input__field--outlined {
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+}
+
+.premium-input__field--outlined:focus {
+  border-color: #00ADAD;
+  box-shadow: 0 0 0 2px rgba(0, 173, 173, 0.2);
+}
+
+.premium-input__label--outlined {
+  background-color: white;
+  padding: 0 0.25rem;
+}
+
+/* Variant: Filled */
+.premium-input--filled {
+  border-radius: 0.375rem;
+}
+
+.premium-input__field--filled {
+  background-color: #F3F4F6;
+  border-radius: 0.375rem;
+}
+
+.premium-input__field--filled:focus {
+  background-color: #E5E7EB;
+}
+
+/* Error State */
+.premium-input__field--error {
+  border-color: #EF4444 !important;
+}
+
+.premium-input__field--error:focus {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Disabled State */
+.premium-input--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.premium-input--disabled .premium-input__field {
+  cursor: not-allowed;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .premium-input__field {
+    height: 48px;
+    font-size: 0.875rem;
+  }
+  
+  .premium-input__label {
+    font-size: 0.875rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .premium-input__field {
+    color: #E5E7EB;
+  }
+  
+  .premium-input__label--outlined {
+    background-color: #1F2937;
+  }
+  
+  .premium-input__field--filled {
+    background-color: #374151;
+  }
+  
+  .premium-input__field--filled:focus {
+    background-color: #4B5563;
+  }
+  
+  .premium-input--default {
+    border-bottom-color: #4B5563;
+  }
+  
+  .premium-input__field--outlined {
+    border-color: #4B5563;
+  }
+  
+  .premium-input__helper-text {
+    color: #9CA3AF;
+  }
+}

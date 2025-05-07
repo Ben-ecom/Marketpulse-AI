@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketPulse AI Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MarketPulse AI Test Pagina</h1>
+        <p>Deze pagina test of de statische bestanden correct worden geserveerd en of JavaScript werkt.</p>
+        
+        <button id="testButton">Test API</button>
+        
+        <h2>API Response:</h2>
+        <pre id="response">Klik op de knop om de API te testen</pre>
+    </div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async function() {
+            const responseElement = document.getElementById('response');
+            responseElement.textContent = 'Bezig met laden...';
+            
+            try {
+                const response = await fetch('/');
+                const data = await response.json();
+                responseElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseElement.textContent = 'Fout: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

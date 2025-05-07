@@ -1,0 +1,77 @@
+.marketing-recommendations-card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.marketing-recommendations-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.filter-chip {
+  margin: 4px;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  transform: scale(1.05);
+}
+
+.recommendation-item {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.recommendation-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-content {
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+}
+
+/* Animaties voor het laden en toevoegen van aanbevelingen */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recommendation-item {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Verschillende kleuren voor verschillende types aanbevelingen */
+.recommendation-item[data-type="ad_copy"] {
+  border-left: 4px solid #2196f3;
+}
+
+.recommendation-item[data-type="email"] {
+  border-left: 4px solid #4caf50;
+}
+
+.recommendation-item[data-type="product_page"] {
+  border-left: 4px solid #ff9800;
+}
+
+.recommendation-item[data-type="ugc_script"] {
+  border-left: 4px solid #e91e63;
+}
+
+.recommendation-item[data-type="seo"] {
+  border-left: 4px solid #9c27b0;
+}

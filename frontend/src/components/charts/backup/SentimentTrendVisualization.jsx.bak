@@ -1,0 +1,453 @@
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  Tabs,
+  Tab,
+  Grid,
+  Tooltip,
+  IconButton,
+  useTheme,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip
+} from '@mui/material';
+import {
+  InfoOutlined as InfoIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  TrendingFlat as TrendingFlatIcon
+} from '@mui/icons-material';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  Legend, 
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar
+} from 'recharts';
+
+// Voeg een stijl toe voor visueel verborgen elementen (voor schermlezers)
+const visuallyHiddenStyle = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: '0',
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: '0'
+};
+
+/**
+ * SentimentTrendVisualization Component
+ * 
+ * Deze component visualiseert sentimenttrends over tijd, per platform en per categorie.
+ * Het biedt gebruikers verschillende interactieve visualisaties om inzicht te krijgen in
+ * sentiment patronen en trends binnen de verzamelde data.
+ * 
+ * De component heeft vier hoofdvisualisaties, toegankelijk via tabs:
+ * 1. Sentiment Trend - Toont de ontwikkeling van sentiment over tijd met filtering op tijdsperiode
+ * 2. Platform Vergelijking - Vergelijkt sentiment scores tussen verschillende platforms
+ * 3. Sentiment Verdeling - Visualiseert de verdeling van positief/neutraal/negatief sentiment
+ * 4. Sentiment per Categorie - Toont sentiment scores per categorie met filtering mogelijkheden
+ * 
+ * Elke visualisatie biedt interactieve elementen zoals tooltips, filters en klikbare datapunten
+ * voor gedetailleerde analyse. De component is ontworpen om zowel overzicht als diepgaande
+ * inzichten te bieden in sentiment patronen.
+ * 
+ * @component
+ * @example
+ * ```jsx
+ * <SentimentTrendVisualization
+ *   data={sentimentData}
+ *   platform="all"
+ *   height={400}
+ *   onDataPointClick={handleDataPointClick}
+ * />
+ * ```
+ */
+const SentimentTrendVisualization = ({ 
+  data, 
+  platform = 'all', 
+  height = 400, 
+  onDataPointClick = () => {} 
+}) => {
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState(0);
+  const [timeRange, setTimeRange] = useState('all');
+  const [category, setCategory] = useState('all');
+  const [processedData, setProcessedData] = useState(null);
+  
+  // Beschikbare categorieën uit data
+  const categories = data?.categories || ['product', 'service', 'price', 'quality'];
+  
+  // Beschikbare tijdsperiodes
+  const timeRanges = [
+    { value: 'week', label: 'Afgelopen week' },
+    { value: 'month', label: 'Afgelopen maand' },
+    { value: 'quarter', label: 'Afgelopen kwartaal' },
+    { value: 'year', label: 'Afgelopen jaar' },
+    { value: 'all', label: 'Alle data' }
+  ];
+  
+  // Verwerk data wanneer deze verandert of wanneer filters veranderen
+  useEffect(() => {
+    if (data) {
+      // Hier zou normaal gesproken data transformatie plaatsvinden
+      // Voor nu gebruiken we mock data
+      const mockTimelineData = generateMockTimelineData(timeRange);
+      const mockPlatformData = generateMockPlatformData();
+      const mockDistributionData = generateMockDistributionData();
+      const mockCategoryData = generateMockCategoryData(category);
+      
+      setProcessedData({
+        timeline: mockTimelineData,
+        platforms: mockPlatformData,
+        distribution: mockDistributionData,
+        categories: mockCategoryData
+      });
+    }
+  }, [data, platform, timeRange, category]);
+  
+  // Mock data generatie functies
+  const generateMockTimelineData = (range) => {
+    // Genereer tijdlijn data op basis van geselecteerde range
+    const now = new Date();
+    const data = [];
+    let points;
+    let interval;
+    
+    switch(range) {
+      case 'week':
+        points = 7;
+        interval = 24 * 60 * 60 * 1000; // 1 dag
+        break;
+      case 'month':
+        points = 30;
+        interval = 24 * 60 * 60 * 1000; // 1 dag
+        break;
+      case 'quarter':
+        points = 12;
+        interval = 7 * 24 * 60 * 60 * 1000; // 1 week
+        break;
+      case 'year':
+        points = 12;
+        interval = 30 * 24 * 60 * 60 * 1000; // 1 maand
+        break;
+      default:
+        points = 12;
+        interval = 30 * 24 * 60 * 60 * 1000; // 1 maand
+    }
+    
+    for (let i = points - 1; i >= 0; i--) {
+      const date = new Date(now.getTime() - (i * interval));
+      const formattedDate = formatDate(date, range);
+      
+      // Genereer random sentiment waarden
+      const positive = 30 + Math.floor(Math.random() * 40); // 30-70%
+      const negative = 10 + Math.floor(Math.random() * 30); // 10-40%
+      const neutral = 100 - positive - negative;
+      
+      // Bereken gemiddelde sentiment score (-1 tot 1)
+      const sentimentScore = ((positive * 1) + (neutral * 0) + (negative * -1)) / 100;
+      
+      data.push({
+        date: formattedDate,
+        positive,
+        negative,
+        neutral,
+        sentimentScore: parseFloat(sentimentScore.toFixed(2))
+      });
+    }
+    
+    return data;
+  };
+  
+  const generateMockPlatformData = () => {
+    // Genereer platform vergelijking data
+    return [
+      { 
+        platform: 'Reddit', 
+        positive: 45 + Math.floor(Math.random() * 10), 
+        neutral: 25 + Math.floor(Math.random() * 10), 
+        negative: 30 - Math.floor(Math.random() * 10),
+        sentimentScore: 0.15 + (Math.random() * 0.2 - 0.1)
+      },
+      { 
+        platform: 'Amazon', 
+        positive: 60 + Math.floor(Math.random() * 10), 
+        neutral: 20 + Math.floor(Math.random() * 10), 
+        negative: 20 - Math.floor(Math.random() * 10),
+        sentimentScore: 0.4 + (Math.random() * 0.2 - 0.1)
+      },
+      { 
+        platform: 'Instagram', 
+        positive: 70 + Math.floor(Math.random() * 10), 
+        neutral: 20 + Math.floor(Math.random() * 10), 
+        negative: 10 - Math.floor(Math.random() * 5),
+        sentimentScore: 0.6 + (Math.random() * 0.2 - 0.1)
+      },
+      { 
+        platform: 'TikTok', 
+        positive: 65 + Math.floor(Math.random() * 10), 
+        neutral: 25 + Math.floor(Math.random() * 10), 
+        negative: 10 - Math.floor(Math.random() * 5),
+        sentimentScore: 0.55 + (Math.random() * 0.2 - 0.1)
+      }
+    ];
+  };
+  
+  const generateMockDistributionData = () => {
+    // Genereer sentiment distributie data
+    const positive = 55 + Math.floor(Math.random() * 10);
+    const negative = 20 + Math.floor(Math.random() * 10);
+    const neutral = 100 - positive - negative;
+    
+    return [
+      { name: 'Positief', value: positive },
+      { name: 'Neutraal', value: neutral },
+      { name: 'Negatief', value: negative }
+    ];
+  };
+  
+  const generateMockCategoryData = (selectedCategory) => {
+    // Genereer sentiment per categorie data
+    const allCategories = [
+      { 
+        category: 'product', 
+        label: 'Product',
+        positive: 50 + Math.floor(Math.random() * 20), 
+        neutral: 30 + Math.floor(Math.random() * 10), 
+        negative: 20 - Math.floor(Math.random() * 10),
+        sentimentScore: 0.3 + (Math.random() * 0.4 - 0.2)
+      },
+      { 
+        category: 'service', 
+        label: 'Service',
+        positive: 60 + Math.floor(Math.random() * 20), 
+        neutral: 20 + Math.floor(Math.random() * 10), 
+        negative: 20 - Math.floor(Math.random() * 10),
+        sentimentScore: 0.4 + (Math.random() * 0.4 - 0.2)
+      },
+      { 
+        category: 'price', 
+        label: 'Prijs',
+        positive: 40 + Math.floor(Math.random() * 20), 
+        neutral: 20 + Math.floor(Math.random() * 10), 
+        negative: 40 - Math.floor(Math.random() * 20),
+        sentimentScore: 0 + (Math.random() * 0.4 - 0.2)
+      },
+      { 
+        category: 'quality', 
+        label: 'Kwaliteit',
+        positive: 70 + Math.floor(Math.random() * 20), 
+        neutral: 20 + Math.floor(Math.random() * 10), 
+        negative: 10 - Math.floor(Math.random() * 5),
+        sentimentScore: 0.6 + (Math.random() * 0.3 - 0.15)
+      }
+    ];
+    
+    if (selectedCategory !== 'all') {
+      return allCategories.filter(cat => cat.category === selectedCategory);
+    }
+    
+    return allCategories;
+  };
+  
+  // Helper functie voor formatteren van datum
+  const formatDate = (date, range) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    switch(range) {
+      case 'week':
+      case 'month':
+        return `${day}-${month}`;
+      case 'quarter':
+        return `Week ${Math.ceil(date.getDate() / 7)} ${getMonthName(date.getMonth())}`;
+      case 'year':
+        return getMonthName(date.getMonth());
+      default:
+        return `${month}-${year}`;
+    }
+  };
+  
+  // Helper functie voor maandnamen
+  const getMonthName = (monthIndex) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
+    return months[monthIndex];
+  };
+  
+  // Handle tab change
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+  
+  // Handle time range change
+  const handleTimeRangeChange = (event) => {
+    setTimeRange(event.target.value);
+  };
+  
+  // Handle category change
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value);
+  };
+  
+  // Kleurenschema voor sentiment
+  const sentimentColors = {
+    positive: theme.palette.success.main,
+    neutral: theme.palette.grey[400],
+    negative: theme.palette.error.main,
+    sentimentScore: theme.palette.primary.main
+  };
+  
+                        label={cat.sentimentScore > 0.3 ? 'Zeer positief' : cat.sentimentScore > 0 ? 'Positief' : cat.sentimentScore > -0.3 ? 'Negatief' : 'Zeer negatief'}
+                        color={cat.sentimentScore > 0 ? 'success' : 'error'}
+                        aria-label={`Sentiment: ${cat.sentimentScore > 0.3 ? 'Zeer positief' : cat.sentimentScore > 0 ? 'Positief' : cat.sentimentScore > -0.3 ? 'Negatief' : 'Zeer negatief'}`}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Render component
+  return (
+    <Box>
+      {/* Tabs voor verschillende visualisaties */}
+      <Tabs 
+        value={activeTab} 
+        onChange={handleTabChange} 
+        variant="scrollable" 
+        scrollButtons="auto" 
+        sx={{ mb: 2 }}
+        aria-label="Sentiment visualisatie opties"
+      >
+        <Tab 
+          label="Sentiment Trend" 
+          id="sentiment-tab-0"
+          aria-controls="sentiment-tabpanel-0"
+        />
+        <Tab 
+          label="Platform Vergelijking" 
+          id="sentiment-tab-1"
+          aria-controls="sentiment-tabpanel-1"
+        />
+        <Tab 
+          label="Sentiment Verdeling" 
+          id="sentiment-tab-2"
+          aria-controls="sentiment-tabpanel-2"
+        />
+        <Tab 
+          label="Sentiment per Categorie" 
+          id="sentiment-tab-3"
+          aria-controls="sentiment-tabpanel-3"
+        />
+      </Tabs>
+      
+      {/* Visualisatie op basis van geselecteerde tab */}
+      <div
+        role="tabpanel"
+        id="sentiment-tabpanel-0"
+        aria-labelledby="sentiment-tab-0"
+        hidden={activeTab !== 0}
+      >
+        {activeTab === 0 && renderSentimentTimeline()}
+      </div>
+      <div
+        role="tabpanel"
+        id="sentiment-tabpanel-1"
+        aria-labelledby="sentiment-tab-1"
+        hidden={activeTab !== 1}
+      >
+        {activeTab === 1 && renderPlatformComparison()}
+      </div>
+      <div
+        role="tabpanel"
+        id="sentiment-tabpanel-2"
+        aria-labelledby="sentiment-tab-2"
+        hidden={activeTab !== 2}
+      >
+        {activeTab === 2 && renderSentimentDistribution()}
+      </div>
+      <div
+        role="tabpanel"
+        id="sentiment-tabpanel-3"
+        aria-labelledby="sentiment-tab-3"
+        hidden={activeTab !== 3}
+      >
+        {activeTab === 3 && renderSentimentByCategory()}
+      </div>
+      
+      {/* Fallback voor ontbrekende data */}
+      {!data && (
+        <Box 
+          sx={{ p: 3, textAlign: 'center' }}
+          role="status"
+          aria-live="polite"
+        >
+          <Typography variant="body1" color="text.secondary">
+            Geen data beschikbaar voor visualisatie.
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+SentimentTrendVisualization.propTypes = {
+  /**
+   * Object met sentiment data voor visualisatie.
+   * Verwacht format: { timeline: [...], platforms: [...], distribution: [...], categories: [...] }
+   */
+  data: PropTypes.shape({
+    timeline: PropTypes.array,
+    platforms: PropTypes.array,
+    distribution: PropTypes.array,
+    categories: PropTypes.array,
+  }),
+  
+  /**
+   * Platform filter voor de visualisaties.
+   * Gebruik 'all' voor alle platforms of een specifieke platform naam.
+   */
+  platform: PropTypes.string,
+  
+  /**
+   * Hoogte van de visualisatie in pixels.
+   */
+  height: PropTypes.number,
+  
+  /**
+   * Callback functie die wordt aangeroepen wanneer een gebruiker op een datapunt klikt.
+   * Ontvangt het datapunt object als parameter.
+   * @param {Object} dataPoint - Het aangeklikte datapunt met alle bijbehorende data
+   */
+  onDataPointClick: PropTypes.func
+};
+
+export default SentimentTrendVisualization;

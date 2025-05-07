@@ -1,0 +1,125 @@
+# Task ID: 1
+# Title: Setup Core Infrastructure with Supabase and Render
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Set up the foundational infrastructure using Supabase for database/backend and Render for hosting/deployment.
+# Details:
+1. Create a Supabase project and set up the required database tables: `scrape_results`, `scrape_jobs`, `users`, and `projects`.
+2. Configure Supabase Auth for user authentication and authorization.
+3. Set up Supabase Storage for large datasets and exports.
+4. Create a Render account and configure Web Service for React frontend.
+5. Set up API Service on Render for Express.js backend.
+6. Configure Cron Jobs on Render for scheduled scraping tasks.
+7. Implement CI/CD pipeline connecting GitHub repository to Render for automatic deployments.
+8. Set up environment variables and secrets management.
+9. Implement basic logging and monitoring.
+
+# Test Strategy:
+1. Verify database connection and table creation with test queries.
+2. Test authentication flow with sample user registration and login.
+3. Upload and retrieve test files from Storage.
+4. Confirm successful deployment of minimal frontend and backend applications.
+5. Verify Cron Job execution with a simple scheduled task.
+6. Test CI/CD pipeline with a minor code change.
+7. Ensure proper environment variable access across services.
+
+# Subtasks:
+## 1. Create and Configure Supabase Project with Database Schema [pending]
+### Dependencies: None
+### Description: Set up a new Supabase project and implement the required database schema with proper relationships and access controls.
+### Details:
+1. Create a new Supabase project through the Supabase dashboard.
+2. Design and implement the database schema with the following tables:
+   - `users`: Store user information (id, email, name, created_at)
+   - `projects`: Store project details (id, name, description, user_id, created_at)
+   - `scrape_jobs`: Store scraping job configurations (id, project_id, name, url_pattern, frequency, status, created_at)
+   - `scrape_results`: Store scraping results (id, scrape_job_id, data, status, created_at)
+3. Set up appropriate relationships between tables (foreign keys).
+4. Configure Row Level Security (RLS) policies to ensure users can only access their own data.
+5. Create database indexes for performance optimization.
+6. Test the schema by inserting and querying sample data through the Supabase interface.
+7. Document the database schema and relationships.
+
+## 2. Implement Supabase Authentication and Storage [pending]
+### Dependencies: 1.1
+### Description: Configure Supabase Auth for user authentication and set up Supabase Storage for handling large datasets and exports.
+### Details:
+1. Enable and configure Supabase Auth with email/password authentication.
+2. Set up OAuth providers if needed (Google, GitHub).
+3. Configure email templates for verification, password reset, etc.
+4. Create custom user profiles linked to the users table.
+5. Set up Supabase Storage buckets:
+   - `exports`: For storing generated data exports
+   - `datasets`: For storing large scraped datasets
+6. Configure appropriate bucket permissions using RLS.
+7. Implement test cases for user registration, login, and profile management.
+8. Create helper functions for common auth operations (signup, login, password reset).
+9. Test file uploads and downloads to/from storage buckets.
+
+## 3. Set Up Render Web Service for Frontend Deployment [pending]
+### Dependencies: 1.2
+### Description: Create and configure a Render Web Service for hosting the React frontend application with proper environment configuration.
+### Details:
+1. Create a Render account if not already available.
+2. Set up a new Web Service on Render for the React frontend.
+3. Configure the build settings:
+   - Build command: `npm install && npm run build`
+   - Start command: `npm start`
+   - Node version: Select appropriate version
+4. Set up environment variables:
+   - `REACT_APP_SUPABASE_URL`
+   - `REACT_APP_SUPABASE_ANON_KEY`
+   - Other frontend-specific environment variables
+5. Configure auto-deploy from the GitHub repository.
+6. Set up a custom domain if available.
+7. Configure HTTPS and SSL certificates.
+8. Test the deployment with a simple React app that connects to Supabase.
+9. Set up proper caching and CDN settings for optimal performance.
+
+## 4. Deploy Express.js Backend as Render API Service [pending]
+### Dependencies: 1.2
+### Description: Set up and configure a Render API Service for the Express.js backend with proper connection to Supabase.
+### Details:
+1. Create a new API Service on Render for the Express.js backend.
+2. Configure the build settings:
+   - Build command: `npm install`
+   - Start command: `node server.js` (or appropriate entry point)
+   - Node version: Select appropriate version
+3. Set up environment variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_KEY`
+   - `JWT_SECRET`
+   - Other backend-specific environment variables
+4. Configure auto-deploy from the GitHub repository.
+5. Set up health check endpoints.
+6. Implement basic Express.js server with Supabase connection.
+7. Create API routes for authentication and basic data operations.
+8. Test the API endpoints using Postman or similar tool.
+9. Implement proper error handling and logging middleware.
+
+## 5. Configure Render Cron Jobs and CI/CD Pipeline [pending]
+### Dependencies: 1.3, 1.4
+### Description: Set up scheduled scraping tasks using Render Cron Jobs and implement a complete CI/CD pipeline for automated testing and deployment.
+### Details:
+1. Create Render Cron Jobs for scheduled scraping tasks:
+   - Configure job frequency (hourly, daily, etc.)
+   - Set up the command to trigger scraping endpoints
+   - Configure appropriate timeout settings
+2. Implement CI/CD pipeline:
+   - Set up GitHub Actions workflow for testing
+   - Configure automatic deployment to Render on successful merges to main branch
+   - Set up staging and production environments if needed
+3. Implement comprehensive logging:
+   - Set up a logging service (e.g., Render logs, external service)
+   - Configure log retention policies
+   - Implement structured logging in the application
+4. Set up monitoring:
+   - Configure uptime monitoring
+   - Set up performance monitoring
+   - Implement alerts for critical errors
+5. Test the complete infrastructure:
+   - Verify scheduled jobs are running correctly
+   - Test the entire deployment pipeline
+   - Validate logging and monitoring functionality
+

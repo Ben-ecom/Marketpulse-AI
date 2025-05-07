@@ -1,0 +1,39 @@
+{
+  "proxies": [
+    {
+      "host": "proxy1.example.com",
+      "port": 8080,
+      "protocol": "http",
+      "username": "user1",
+      "password": "pass1",
+      "country": "NL",
+      "city": "Amsterdam"
+    },
+    {
+      "host": "proxy2.example.com",
+      "port": 8080,
+      "protocol": "https",
+      "username": "user2",
+      "password": "pass2",
+      "country": "DE",
+      "city": "Berlin"
+    },
+    {
+      "host": "proxy3.example.com",
+      "port": 1080,
+      "protocol": "socks5",
+      "username": "user3",
+      "password": "pass3",
+      "country": "US",
+      "city": "New York"
+    }
+  ],
+  "rotationStrategy": "round-robin",
+  "rotationInterval": 10,
+  "retryCount": 3,
+  "proxyProvider": {
+    "name": "ExampleProxyProvider",
+    "apiKey": "your-api-key-here",
+    "apiUrl": "https://api.exampleprovider.com/v1/proxies"
+  }
+}

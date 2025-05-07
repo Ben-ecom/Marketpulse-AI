@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MarketPulse AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2c3e50; }
+        button { 
+            background-color: #3498db; 
+            color: white; 
+            border: none; 
+            padding: 10px; 
+            margin: 5px 0; 
+            cursor: pointer; 
+        }
+        pre { 
+            background-color: #f8f9fa; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+        }
+    </style>
+</head>
+<body>
+    <h1>MarketPulse AI API</h1>
+    <p>Eenvoudige test pagina voor de MarketPulse AI API</p>
+    
+    <button onclick="testApi()">Test API</button>
+    
+    <h2>Resultaat:</h2>
+    <pre id="result">Klik op de knop om de API te testen</pre>
+    
+    <script>
+        function testApi() {
+            document.getElementById('result').textContent = 'Bezig met laden...';
+            
+            fetch('/')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(function(error) {
+                    document.getElementById('result').textContent = 'Fout: ' + error.message;
+                });
+        }
+    </script>
+</body>
+</html>

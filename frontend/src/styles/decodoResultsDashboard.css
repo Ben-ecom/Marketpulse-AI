@@ -1,0 +1,180 @@
+.decodo-results-dashboard {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  min-height: calc(100vh - 64px);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  color: #4a5568;
+}
+
+.filters-container {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+}
+
+.dashboard-tabs {
+  margin-bottom: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.tab-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  gap: 1rem;
+}
+
+.error-alert {
+  margin-bottom: 1.5rem;
+}
+
+.results-table {
+  margin-bottom: 1rem;
+}
+
+.selected-row {
+  background-color: rgba(66, 153, 225, 0.1) !important;
+}
+
+.details-row {
+  background-color: #f7fafc;
+}
+
+.result-details {
+  padding: 1rem;
+}
+
+.json-preview {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.empty-state {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.implementation-steps {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.implementation-steps li {
+  margin-bottom: 0.5rem;
+}
+
+/* Platform chips styling */
+.platform-chip {
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+.platform-reddit {
+  background-color: #ff4500;
+  color: white;
+}
+
+.platform-amazon {
+  background-color: #ff9900;
+  color: black;
+}
+
+.platform-instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: white;
+}
+
+.platform-tiktok {
+  background-color: #000000;
+  color: white;
+}
+
+.platform-trustpilot {
+  background-color: #00b67a;
+  color: white;
+}
+
+.platform-awareness {
+  background-color: #4299e1;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .dashboard-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .tab-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .tab-actions {
+    width: 100%;
+  }
+}

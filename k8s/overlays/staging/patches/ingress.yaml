@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: marketpulse-ingress
+spec:
+  rules:
+  - host: staging.marketpulse.ai
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: marketpulse-backend
+            port:
+              number: 3000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: marketpulse-frontend
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - staging.marketpulse.ai
+    secretName: marketpulse-staging-tls

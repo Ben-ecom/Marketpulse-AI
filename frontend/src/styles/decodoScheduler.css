@@ -1,0 +1,113 @@
+.decodo-scheduler {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.scheduler-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.scheduler-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.refresh-button {
+  color: #666;
+}
+
+.error-alert {
+  margin-bottom: 16px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 16px;
+}
+
+.empty-state {
+  background-color: #f9f9f9;
+  border: 1px dashed #ddd;
+}
+
+.jobs-table {
+  margin-bottom: 16px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.run-button {
+  color: #4caf50;
+}
+
+.pause-button {
+  color: #ff9800;
+}
+
+.play-button {
+  color: #4caf50;
+}
+
+.edit-button {
+  color: #2196f3;
+}
+
+.delete-button {
+  color: #f44336;
+}
+
+.platform-chip {
+  text-transform: capitalize;
+}
+
+.platform-reddit {
+  background-color: #ff4500;
+  color: white;
+}
+
+.platform-amazon {
+  background-color: #ff9900;
+  color: black;
+}
+
+.platform-instagram {
+  background-color: #c13584;
+  color: white;
+}
+
+.platform-tiktok {
+  background-color: #000000;
+  color: white;
+}
+
+.platform-trustpilot {
+  background-color: #00b67a;
+  color: white;
+}
+
+/* Responsive aanpassingen */
+@media (max-width: 600px) {
+  .scheduler-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .scheduler-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

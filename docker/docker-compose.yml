@@ -1,0 +1,45 @@
+version: '3.8'
+
+# Hoofdbestand voor Docker Compose configuratie
+# Gebruik dit bestand als ingang voor alle Docker configuraties
+# 
+# Voor development omgeving:
+# docker-compose -f docker/docker-compose.yml -f docker/development/docker-compose.dev.yml up
+#
+# Voor productie omgeving:
+# docker-compose -f docker/docker-compose.yml -f docker/production/docker-compose.prod.yml up
+
+services:
+  # Basisservices die in alle omgevingen worden gebruikt
+  # Specifieke configuraties worden toegevoegd via de omgevingsspecifieke bestanden
+  
+  backend:
+    # Basisinstellingen voor backend service
+    # Wordt uitgebreid in omgevingsspecifieke bestanden
+    image: marketpulse-backend
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+    networks:
+      - marketpulse-network
+
+  frontend:
+    # Basisinstellingen voor frontend service
+    # Wordt uitgebreid in omgevingsspecifieke bestanden
+    image: marketpulse-frontend
+    networks:
+      - marketpulse-network
+
+  database:
+    # Basisinstellingen voor database service
+    # Wordt uitgebreid in omgevingsspecifieke bestanden
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-marketpulse}
+    networks:
+      - marketpulse-network
+
+networks:
+  marketpulse-network:
+    driver: bridge

@@ -1,0 +1,121 @@
+/* InsightDetail Component Styles */
+
+.insight-detail-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-detail-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.insight-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.insight-platform-chip {
+  background-color: rgba(0, 173, 173, 0.1);
+  color: #00ADAD;
+  border: 1px solid rgba(0, 173, 173, 0.3);
+  transition: all 0.2s ease;
+}
+
+.insight-platform-chip:hover {
+  background-color: rgba(0, 173, 173, 0.2);
+}
+
+.insight-sentiment-chip {
+  transition: all 0.2s ease;
+}
+
+.insight-sentiment-chip:hover {
+  filter: brightness(1.1);
+}
+
+.insight-category-chip {
+  transition: all 0.2s ease;
+}
+
+.insight-category-chip:hover {
+  filter: brightness(1.1);
+}
+
+.insight-score-chip {
+  background-color: rgba(72, 85, 99, 0.1);
+  color: #485563;
+  border: 1px solid rgba(72, 85, 99, 0.3);
+  transition: all 0.2s ease;
+}
+
+.insight-score-chip:hover {
+  background-color: rgba(72, 85, 99, 0.2);
+}
+
+.related-insight-item {
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+
+.related-insight-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Animaties */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-detail-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsieve aanpassingen */
+@media (max-width: 600px) {
+  .insight-content {
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .insight-content {
+    color: #e0e0e0;
+  }
+  
+  .insight-platform-chip {
+    background-color: rgba(0, 173, 173, 0.2);
+  }
+  
+  .insight-platform-chip:hover {
+    background-color: rgba(0, 173, 173, 0.3);
+  }
+  
+  .insight-score-chip {
+    background-color: rgba(72, 85, 99, 0.2);
+    color: #b0b8c1;
+  }
+  
+  .insight-score-chip:hover {
+    background-color: rgba(72, 85, 99, 0.3);
+  }
+  
+  .related-insight-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}

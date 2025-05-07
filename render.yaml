@@ -1,0 +1,53 @@
+services:
+  # Frontend web service
+  - type: web
+    name: marketpulse-ai-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run serve
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: VITE_SUPABASE_URL
+        sync: false # Handmatig in te stellen via Render dashboard
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false # Handmatig in te stellen via Render dashboard
+    autoDeploy: true
+    healthCheckPath: /
+    
+  # Backend API service
+  - type: web
+    name: marketpulse-ai-api
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false # Handmatig in te stellen via Render dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false # Handmatig in te stellen via Render dashboard
+      - key: DECODO_API_KEY
+        sync: false # Handmatig in te stellen via Render dashboard
+    autoDeploy: true
+    healthCheckPath: /api/health
+    
+  # Scheduled scraping service
+  - type: cron
+    name: marketpulse-ai-scheduled-scraper
+    env: node
+    schedule: "0 */6 * * *" # Elke 6 uur
+    buildCommand: cd backend && npm install
+    startCommand: cd backend/scripts && node scheduled-scraper.js
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: SUPABASE_URL
+        sync: false # Handmatig in te stellen via Render dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false # Handmatig in te stellen via Render dashboard
+      - key: DECODO_API_KEY
+        sync: false # Handmatig in te stellen via Render dashboard

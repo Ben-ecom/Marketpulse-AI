@@ -1,0 +1,21 @@
+{
+  "name": "marketpulse-ai-help-system-tests",
+  "version": "1.0.0",
+  "description": "Geautomatiseerde tests voor het MarketPulse AI help-systeem",
+  "main": "HelpSystemTest.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha HelpSystemTest.js --timeout 60000"
+  },
+  "dependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "selenium-webdriver": "^4.10.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "@babel/register": "^7.22.5"
+  }
+}

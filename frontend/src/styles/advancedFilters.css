@@ -1,0 +1,107 @@
+/* Advanced Filters Component Styles */
+
+.advanced-filters {
+  margin-bottom: 1.5rem;
+}
+
+.filter-section {
+  margin-bottom: 1rem;
+}
+
+.filter-section-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #485563;
+}
+
+.search-field {
+  position: relative;
+}
+
+.search-field .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6B7280;
+}
+
+.search-field input {
+  padding-left: 2.5rem;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-direction-button {
+  min-width: auto;
+  padding: 6px;
+}
+
+.filter-chip {
+  margin: 0.25rem;
+  background-color: rgba(72, 85, 99, 0.1);
+}
+
+.filter-chip.active {
+  background-color: rgba(72, 85, 99, 0.2);
+  font-weight: 500;
+}
+
+.filter-chip-icon {
+  margin-right: 0.25rem;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.filter-button {
+  margin-left: 0.5rem;
+}
+
+.clear-filters-button {
+  margin-right: auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .filter-section {
+    margin-bottom: 0.75rem;
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .filter-button {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .clear-filters-button {
+    margin-right: 0;
+    width: 100%;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .filter-section-title {
+    color: #E5E7EB;
+  }
+  
+  .filter-chip {
+    background-color: rgba(229, 231, 235, 0.1);
+  }
+  
+  .filter-chip.active {
+    background-color: rgba(229, 231, 235, 0.2);
+  }
+}
